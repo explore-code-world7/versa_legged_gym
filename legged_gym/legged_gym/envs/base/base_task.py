@@ -151,6 +151,7 @@ class BaseTask():
                     self.gym.sync_frame_time(self.sim)
             else:
                 self.gym.poll_viewer_events(self.viewer)
+
         if hasattr(self, "webviewer"):
             self.webviewer.render(fetch_results=True,
                         step_graphics=True,

@@ -362,7 +362,9 @@ class LeggedRobot(BaseTask):
         return self.robot_config_buffer
 
     def _get_forward_depth_obs(self, privileged= False):
-        return torch.stack(self.sensor_tensor_dict["forward_depth"]).flatten(start_dim= 1)
+        forward_tensor = torch.stack(self.sensor_tensor_dict["forward_depth"]).flatten(start_dim= 1)
+        print(f"forward_tensor = {forward_tensor.shape}")
+        return forward_tensor
 
     ##### The wrapper function to build and help processing observations #####
     def _get_obs_from_components(self, components: list, privileged= False):
@@ -421,7 +423,7 @@ class LeggedRobot(BaseTask):
             num_obs += np.prod(v)
             print(k, num_obs)
         return num_obs
-    
+
     def compute_observations(self):
         """ Computes observations
         """
@@ -441,6 +443,7 @@ class LeggedRobot(BaseTask):
             self.cfg.env.obs_components,
             privileged= False,
         )
+        print(f"self.obs_buf= {self.obs_buf.shape}")
         if hasattr(self.cfg.env, "privileged_obs_components"):
             self.privileged_obs_buf = self._get_obs_from_components(
                 self.cfg.env.privileged_obs_components,
@@ -537,6 +540,8 @@ class LeggedRobot(BaseTask):
         """
         self.up_axis_idx = 2 # 2 for z, 1 for y -> adapt gravity accordingly
         self.sim = self.gym.create_sim(self.sim_device_id, self.graphics_device_id, self.physics_engine, self.sim_params)
+        print("graphics_device_id")
+        print(self.graphics_device_id)
         self._create_terrain()
         self._create_envs()
 
@@ -1275,6 +1280,7 @@ class LeggedRobot(BaseTask):
                 getattr(self.cfg.sensor, sensor_name).horizontal_fov[1],
             ) if isinstance(getattr(self.cfg.sensor, sensor_name).horizontal_fov, (tuple, list)) else getattr(self.cfg.sensor, sensor_name).horizontal_fov
             # vertical_fov = horizontal_fov * camera_props.height / camera_props.width
+
         camera_handle = self.gym.create_camera_sensor(env_handle, camera_props)
         local_transform = gymapi.Transform()
         if isinstance(getattr(self.cfg.sensor, sensor_name).position, dict):

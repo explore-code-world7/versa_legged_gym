@@ -25,26 +25,62 @@ class H1_41RoughCfg(LeggedRobotCfg):
         dynamic_friction = 0.8
         restitution = 0.5
 
-        # mesh_type = "trimesh" # Don't change
-        # num_rows = 20
-        # num_cols = 50
-        # selected = "TerrainPerlin" # "BarrierTrack" or "TerrainPerlin", "TerrainPerlin" can be used for training a walk policy.
-        # max_init_terrain_level = 0
-        # border_size = 5
-        # slope_treshold = 20.
-        #
-        # curriculum = False # for walk
-        # horizontal_scale = 0.025 # [m]
-        # # vertical_scale = 1. # [m] does not change the value in hightfield
-        # pad_unavailable_info = True
-        # TerrainPerlin_kwargs = dict(
-        #     zScale= [0.08, 0.15],
-        #     # zScale= 0.15, # Use a constant zScale for training a walk policy
-        #     frequency= 10,
-        # )
+    class env(LeggedRobotCfg.env):
+        # 3 + 3 + 3 + 12 + 12 + 12 + 2 = 47
+        # 11 + 41*3 = 134
+        # 这些都不用定义了
+        # num_observations = 132
+        # num_privileged_obs = 135
+        # num_actions = 41
+        obs_components = [
+            # "lin_vel",      # 3
+            "ang_vel",      # 3
+            "projected_gravity",    #2
+            "commands",     # 3
+            "dof_pos",      # 41
+            "dof_vel",      # 41
+            "last_actions", # 41
+            "forward_depth",
+        ]
+        privileged_obs_components = [
+            "lin_vel",      # 3
+            "ang_vel",  # 3
+            "projected_gravity",  # 2
+            "commands",  # 3
+            "dof_pos",  # 41
+            "dof_vel",  # 41
+            "last_actions",  # 41
+        ]
 
     class noise(LeggedRobotCfg.noise):
         add_noise=False
+
+        class noise_scales(LeggedRobotCfg.noise.noise_scales):
+            forward_depth = 0.01
+
+    # brave to try out
+    class sensor(LeggedRobotCfg):
+        class forward_camera:
+            obs_components = ["forward_depth"]
+            resolution = [int(480/4), int(640/4)]
+            position = [0.0, 0.0, 0.50]
+            rotation = [0.0, 0.0, 0.0]
+            resized_resolution = [48, 64]
+            output_resolution = [48, 64]
+            horizontal_fov = [86, 90]
+            crop_top_bottom = [int(48/4), 0]
+            crop_left_right = [int(28/4), int(36/4)]
+            near_plane = 0.05
+            depth_range = [0.0, 3.0]
+
+            latency_range = [0.08, 0.142]
+            latency_resampling_time = 5.0
+            refresh_duration = 1/10 # [s]
+
+        class proprioception:
+            obs_components = ["ang_vel", "projected_gravity", "commands", "dof_pos", "dof_vel"]
+            latency_range = [0.005, 0.045] # [s]
+            latency_resampling_time = 5.0 # [s]
 
     class init_state(LeggedRobotCfg.init_state):
         pos = [0.0, 0.0, 1.05]  # x,y,z [m]
@@ -114,22 +150,6 @@ class H1_41RoughCfg(LeggedRobotCfg):
             # 'R_pinky_intermediate_joint': 0,
         }
 
-    class env(LeggedRobotCfg.env):
-        # 3 + 3 + 3 + 12 + 12 + 12 + 2 = 47
-        # 11 + 41*3 = 134
-        num_observations = 132
-        num_privileged_obs = 135
-        num_actions = 41
-        obs_components = [
-            # "lin_vel",      # 3
-            "ang_vel",      # 3
-            "projected_gravity",    #2
-            "commands",     # 3
-            "dof_pos",      # 41
-            "dof_vel",      # 41
-            "last_actions", # 41
-        ]
-
     class control(LeggedRobotCfg.control):
         # PD Drive parameters:
         control_type = 'P'
@@ -190,6 +210,11 @@ class H1_41RoughCfg(LeggedRobotCfg):
 
     class sim(LeggedRobotCfg.sim):
         dt = 0.0025
+        no_camera = False
+
+    class normalization(LeggedRobotCfg.normalization):
+        class obs_scales(LeggedRobotCfg.normalization.obs_scales):
+            forward_depth = 1.0
 
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = True
@@ -261,7 +286,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
             contact_no_vel = -0.2
             feet_swing_height = -20.0
             contact = 1.8
-            hand_sup = -100.0
+            # hand_sup = -100.0
 
 # RunnerCfg
 class H1_41RoughCfgPPO(LeggedRobotCfgPPO):
@@ -274,8 +299,10 @@ class H1_41RoughCfgPPO(LeggedRobotCfgPPO):
         rnn_type = 'lstm'
         rnn_hidden_size =  256
         rnn_num_layers = 1
+
     class algorithm(LeggedRobotCfgPPO.algorithm):
         entropy_coef = 1e-2
+
     class runner(LeggedRobotCfgPPO.runner):
         # policy_class_name = "ActorCritic"
         policy_class_name = "ActorCriticRecurrent"

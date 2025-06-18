@@ -125,6 +125,7 @@ class StairTerrain:
 
     def add_terrain_to_sim(self, gym, sim, device="cpu"):
         self.gym = gym
+        self.sim = sim
         self.device = device
         tm_params = gymapi.TriangleMeshParams()
         tm_params.nb_vertices = self.vertices.shape[0]
@@ -149,7 +150,7 @@ class StairTerrain:
         #         vertices2[:,1] += j*self.env_length
 
         self.gym.add_triangle_mesh(
-            sim, self.vertices.flatten(), self.triangles.flatten(), tm_params)  # 接着加mesh
+            self.sim, self.vertices.flatten(), self.triangles.flatten(), tm_params)  # 接着加mesh
 
         # add env origins
         self.env_origins = np.zeros((self.cfg.num_rows, self.cfg.num_cols, 3))
