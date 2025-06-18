@@ -50,6 +50,7 @@ from legged_gym.utils.terrain import get_terrain_cls
 from legged_gym.utils.math import quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_float
 from legged_gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
+from PIL import Image
 
 # use obs_component to define observations
 
@@ -85,6 +86,7 @@ class LeggedRobot(BaseTask):
         self._init_buffers()
         self._prepare_reward_function()
         self.init_done = True
+        self.frame_no = 0
 
     def step(self, actions):
         """ Apply actions, simulate, call self.post_physics_step()
@@ -105,6 +107,7 @@ class LeggedRobot(BaseTask):
             self.gym.refresh_dof_state_tensor(self.sim)
             self.post_decimation_step(dec_i)
         self.post_physics_step()
+        self.frame_no += 1
 
         # return clipped obs, clipped states (None), rewards, dones and infos
         clip_obs = self.cfg.normalization.clip_observations
@@ -362,8 +365,16 @@ class LeggedRobot(BaseTask):
         return self.robot_config_buffer
 
     def _get_forward_depth_obs(self, privileged= False):
-        forward_tensor = torch.stack(self.sensor_tensor_dict["forward_depth"]).flatten(start_dim= 1)
-        print(f"forward_tensor = {forward_tensor.shape}")
+        depth_list = self.sensor_tensor_dict["forward_depth"]
+        forward_tensor = torch.stack(depth_list).flatten(start_dim= 1)
+
+        depth_img = depth_list[0].clone()
+        depth_img[depth_img<-20] = -20
+        norm_depth_img = (255.0 * (depth_img / torch.min(depth_img - 1e-4))).cpu().numpy()
+        normalized_depth_image = Image.fromarray(norm_depth_img.astype(np.uint8), mode="L")
+        normalized_depth_image.save(os.path.join(LEGGED_GYM_ROOT_DIR, "imgs",  f'frameno_{self.frame_no}_env0.jpg'))
+        import pdb; pdb.set_trace()
+        # print(f"forward_tensor = {forward_tensor.shape}")
         return forward_tensor
 
     ##### The wrapper function to build and help processing observations #####
