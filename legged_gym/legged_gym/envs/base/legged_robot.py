@@ -51,6 +51,8 @@ from legged_gym.utils.math import quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_fl
 from legged_gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
 
+# use obs_component to define observations
+
 class LeggedRobot(BaseTask):
     # Due the safety of using getattr(), we need to specify the available sensors here
     available_sensors = [
@@ -293,7 +295,7 @@ class LeggedRobot(BaseTask):
         self._resample_commands(env_ids)
         self._reset_buffers(env_ids)
 
-    
+
     def compute_reward(self):
         """ Compute rewards
             Calls each reward function which had a non-zero scale (processed in self._prepare_reward_function())
@@ -417,6 +419,7 @@ class LeggedRobot(BaseTask):
         num_obs = 0
         for k, v in obs_segments.items():
             num_obs += np.prod(v)
+            print(k, num_obs)
         return num_obs
     
     def compute_observations(self):
@@ -980,6 +983,7 @@ class LeggedRobot(BaseTask):
         self.last_root_vel = torch.zeros_like(self.root_states[:, 7:13])
         self.last_torques = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
         self.commands = torch.zeros(self.num_envs, self.cfg.commands.num_commands, dtype=torch.float, device=self.device, requires_grad=False) # x vel, y vel, yaw vel, heading
+        self.commands_scale = torch.tensor([self.obs_scales.lin_vel, self.obs_scales.lin_vel, self.obs_scales.ang_vel], device=self.device, requires_grad=False,) # TODO change this
         self.feet_air_time = torch.zeros(self.num_envs, self.feet_indices.shape[0], dtype=torch.float, device=self.device, requires_grad=False)
         self.last_contacts = torch.zeros(self.num_envs, len(self.feet_indices), dtype=torch.bool, device=self.device, requires_grad=False)
         self.last_contact_forces = torch.zeros_like(self.contact_forces)
@@ -1431,7 +1435,11 @@ class LeggedRobot(BaseTask):
             self._create_ground_plane()
         else:
             terrain_cls = self.cfg.terrain.selected
+            print("==="*20)
+            print(f"terrain_cls = {terrain_cls}")
             self.terrain = get_terrain_cls(terrain_cls)(self.cfg.terrain, self.num_envs)
+            print("="*10,"vertices+triangles")
+            # print(self.terrain.vertices, self.terrain.triangles)
             self.terrain.add_terrain_to_sim(self.gym, self.sim, self.device)
 
     def _get_env_origins(self):

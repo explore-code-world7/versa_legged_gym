@@ -13,7 +13,7 @@ class Go1FieldDistillCfg( Go1FieldCfg ):
         obs_components = [
             "proprioception", # 48
             # "height_measurements", # 187
-            "forward_depth",
+            "forward_depth",    # define camera
         ]
         privileged_obs_components = [
             "proprioception", # 48
@@ -33,6 +33,7 @@ class Go1FieldDistillCfg( Go1FieldCfg ):
         pos = [0.0, 0.0, 0.43] # x,y,z [m]
 
     class sensor( Go1FieldCfg.sensor ):
+        # config forward_camera
         class forward_camera( Go1FieldCfg.sensor.forward_camera ):
             resolution = [int(240/4), int(424/4)]
             # position = dict(
@@ -76,7 +77,8 @@ class Go1FieldDistillCfg( Go1FieldCfg ):
             crop_top_bottom = [0, 0]
             crop_left_right = [int(60/4), int(46/4)]
             depth_range = [0.0, 2.0] # [m]
-            
+
+        # config proprioception
         class proprioception( Go1FieldCfg.sensor.proprioception ): # inherited from A1FieldCfg
             delay_action_obs = False
             delay_privileged_action_obs = False
@@ -148,6 +150,7 @@ class Go1FieldDistillCfg( Go1FieldCfg ):
         )
         
     class commands( A1FieldDistillCfg.commands ):
+        # range of commands
         pass
 
     class control( Go1FieldCfg.control ):
@@ -187,6 +190,7 @@ class Go1FieldDistillCfg( Go1FieldCfg ):
         class scales:
             pass
 
+    # append noise
     class noise( A1FieldDistillCfg.noise ):
         add_noise = True # This only account for proprioception noise and height measurements noise at most
         class noise_scales( A1FieldDistillCfg.noise.noise_scales ):

@@ -16,13 +16,19 @@ class TerrainPerlin:
         self.ySize = cfg.terrain_width * cfg.num_cols # int(cfg.horizontal_scale * cfg.tot_rows)
         self.tot_rows = int(self.xSize / cfg.horizontal_scale)
         self.tot_cols = int(self.ySize / cfg.horizontal_scale)
+        # 必须确保整除
         assert(self.xSize == cfg.horizontal_scale * self.tot_rows and self.ySize == cfg.horizontal_scale * self.tot_cols)
+        # 地形高度场
         self.heightsamples_float = self.generate_fractal_noise_2d(self.xSize, self.ySize, self.tot_rows, self.tot_cols, **cfg.TerrainPerlin_kwargs)
         # self.heightsamples_float[self.tot_cols//2 - 100:, :] += 100000
         # self.heightsamples_float[self.tot_cols//2 - 40: self.tot_cols//2 + 40, :] = np.mean(self.heightsamples_float)
+        # 地形采样场
         self.heightsamples = (self.heightsamples_float * (1 / cfg.vertical_scale)).astype(np.int16)
         self.heightfield_raw_pyt = torch.tensor(self.heightsamples, device= "cpu")
-        
+
+        print(f"shape =")
+        print(self.heightsamples_float.shape, self.heightsamples.shape, self.heightfield_raw_pyt.shape)
+
 
         print("Terrain heightsamples shape: ", self.heightsamples.shape)
         print("Terrain heightsamples stat: ", *(np.array([np.min(self.heightsamples), np.max(self.heightsamples), np.mean(self.heightsamples), np.std(self.heightsamples), np.median(self.heightsamples)]) * cfg.vertical_scale))
@@ -61,6 +67,9 @@ class TerrainPerlin:
     @staticmethod
     def generate_fractal_noise_2d(xSize=20, ySize=20, xSamples=1600, ySamples=1600, \
         frequency=10, fractalOctaves=2, fractalLacunarity = 2.0, fractalGain=0.25, zScale = 0.23):
+        # fractalOctaves： 分形的层数
+        # fractalLacunarity： 控制频率的增加速率
+        # fractalGain: 控制每个八度的振幅衰减程度
         xScale = int(frequency * xSize)
         yScale = int(frequency * ySize)
         amplitude = 1
