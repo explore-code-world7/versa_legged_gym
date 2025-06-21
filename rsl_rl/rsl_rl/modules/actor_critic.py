@@ -34,9 +34,12 @@ import torch
 import torch.nn as nn
 from torch.distributions import Normal
 from torch.nn.modules import rnn
+
 from rsl_rl.utils.collections import namedarraytuple, is_namedarraytuple
 
+LstmHiddenState = namedarraytuple('LstmHiddenState', ['hidden', 'cell'])
 ActorCriticHiddenState = namedarraytuple('ActorCriticHiddenState', ['actor', 'critic'])
+
 
 class ActorCritic(nn.Module):
     is_recurrent = False
@@ -154,9 +157,12 @@ class ActorCritic(nn.Module):
     def clip_std(self, min= None, max= None):
         self.std.copy_(self.std.clip(min= min, max= max))
 
-    def get_hidden_states(self):
-        # return ActorCriticHiddenState(self.memory_a.hidden_states, self.memory_c.hidden_states)
-        return None, None
+    # def get_hidden_states(self):
+    #     hid_a_batch = LstmHiddenState((None, None))
+    #     hid_c_batch = LstmHiddenState((None, None))
+    #     import pdb; pdb.set_trace()
+    #
+    #     return ActorCriticHiddenState(hid_a_batch, hid_c_batch)
 
 
 def get_activation(act_name):

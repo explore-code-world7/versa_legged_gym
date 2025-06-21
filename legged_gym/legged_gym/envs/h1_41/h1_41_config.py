@@ -59,8 +59,8 @@ class H1_41RoughCfg(LeggedRobotCfg):
         step_height = 0.25
         slope_threshold = 0.75
 
-        terrain_length = block_length*2
-        terrain_width = block_width*3
+        # terrain_length = block_length*2
+        # terrain_width = block_width*3
         num_rows = 2
         num_cols = 2
 
@@ -256,7 +256,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
         # decimation: Number of control action updates @ sim DT per policy DT
-        decimation = 2
+        decimation = 4
 
     class sim(LeggedRobotCfg.sim):
         dt = 0.0025
@@ -361,8 +361,8 @@ class H1_41RoughCfgPPO(LeggedRobotCfgPPO):
         entropy_coef = 1e-2
 
     class runner(LeggedRobotCfgPPO.runner):
-        policy_class_name = "ActorCritic"
-        # policy_class_name = "ActorCriticRecurrent"
+        # policy_class_name = "ActorCritic"
+        policy_class_name = "ActorCriticRecurrent"
         # policy_class_name = "TriActCritic"
         algorithm_class_name = "PPO"
         max_iterations = 1000

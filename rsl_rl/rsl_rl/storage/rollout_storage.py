@@ -33,8 +33,12 @@ import torch
 import numpy as np
 
 from rsl_rl.utils import split_and_pad_trajectories
-from rsl_rl.utils.collections import is_namedarraytuple
+
 from rsl_rl.utils.buffer import buffer_from_example, buffer_method, buffer_swap, buffer_expand
+
+from rsl_rl.utils.collections import namedarraytuple, is_namedarraytuple
+LstmHiddenState = namedarraytuple('LstmHiddenState', ['hidden', 'cell'])
+ActorCriticHiddenState = namedarraytuple('ActorCriticHiddenState', ['actor', 'critic'])
 
 class RolloutStorage:
     class Transition:
@@ -117,20 +121,38 @@ class RolloutStorage:
         self.step += 1
 
     def _save_hidden_states(self, hidden_states):
-        if hidden_states is None or hidden_states==(None, None):
+        # hidden_states sources from lstm's output
+
+        # if hidden_states is None or hidden_states==(None, None):
+        #     return
+        # # make a tuple out of GRU hidden state sto match the LSTM format
+        # hid_a = hidden_states[0] if isinstance(hidden_states[0], tuple) else (hidden_states[0],)
+        # hid_c = hidden_states[1] if isinstance(hidden_states[1], tuple) else (hidden_states[1],)
+
+        # # initialize if needed
+        # if self.saved_hidden_states_a is None:
+        #     self.saved_hidden_states_a = [torch.zeros(self.observations.shape[0], *hid_a[i].shape, device=self.device) for i in range(len(hid_a))]
+        #     self.saved_hidden_states_c = [torch.zeros(self.observations.shape[0], *hid_c[i].shape, device=self.device) for i in range(len(hid_c))]
+        # # copy the states
+        # for i in range(len(hid_a)):
+        #     self.saved_hidden_states_a[i][self.step].copy_(hid_a[i])
+        #     self.saved_hidden_states_c[i][self.step].copy_(hid_c[i])
+
+        if hidden_states is None:
             return
-        # make a tuple out of GRU hidden state sto match the LSTM format
-        hid_a = hidden_states[0] if isinstance(hidden_states[0], tuple) else (hidden_states[0],)
-        hid_c = hidden_states[1] if isinstance(hidden_states[1], tuple) else (hidden_states[1],)
+        if is_namedarraytuple(hidden_states):
+            try:
+                leading_dims = hidden_states.get_leading_dims()
+            except AttributeError as e:
+                if "None" in str(e):
+                    return
 
         # initialize if needed
-        if self.saved_hidden_states_a is None:
-            self.saved_hidden_states_a = [torch.zeros(self.observations.shape[0], *hid_a[i].shape, device=self.device) for i in range(len(hid_a))]
-            self.saved_hidden_states_c = [torch.zeros(self.observations.shape[0], *hid_c[i].shape, device=self.device) for i in range(len(hid_c))]
+        if self.saved_hidden_states is None:
+            self.saved_hidden_states = buffer_from_example(hidden_states, self.observations.shape[0])
         # copy the states
-        for i in range(len(hid_a)):
-            self.saved_hidden_states_a[i][self.step].copy_(hid_a[i])
-            self.saved_hidden_states_c[i][self.step].copy_(hid_c[i])
+        self.saved_hidden_states[self.step] = hidden_states
+
 
     def clear(self):
         self.step = 0
@@ -180,10 +202,14 @@ class RolloutStorage:
                 yield self.get_minibatch_from_indices(T_idx, B_idx)
 
     # for RNNs only
+    # RNN必须对一整个序列，分配lstm来抽取obs_embedding;
     def reccurent_mini_batch_generator(self, num_mini_batches, num_epochs=8):
-
+        # _padded_obs_trajectories 本来已经按done分割
+        # print(f"observations.shape = {self.observations.shape}")
         self._padded_obs_trajectories, self._trajectory_masks = split_and_pad_trajectories(self.observations, self.dones)
-        if self.privileged_observations is not None: 
+        # print(f"self._padded_obs_trajectories= {self._padded_obs_trajectories.shape}, self.observations = {self.observations.shape}")
+
+        if self.privileged_observations is not None:
             self._padded_critic_obs_trajectories, _ = split_and_pad_trajectories(self.privileged_observations, self.dones)
 
         mini_batch_size = self.num_envs // num_mini_batches
@@ -197,6 +223,7 @@ class RolloutStorage:
                 last_was_done = torch.zeros_like(dones, dtype=torch.bool)
                 last_was_done[1:] = dones[:-1]
                 last_was_done[0] = True
+                # 每个batch拥有的轨迹数目
                 trajectories_batch_size = torch.sum(last_was_done[:, start:stop])
                 last_traj = first_traj + trajectories_batch_size
                 
@@ -206,7 +233,8 @@ class RolloutStorage:
                     padded_B_slice= slice(first_traj, last_traj),
                     prev_done_mask= last_was_done,
                 )
-                
+                # print(f"start = {start}, stop = {stop}")
+                # print(f"first_traj = {first_traj}, last_traj = {last_traj}")
                 first_traj = last_traj
 
     def get_minibatch_from_indices(self, T_slice, B_slice, padded_B_slice= None, prev_done_mask= None):
@@ -222,26 +250,26 @@ class RolloutStorage:
         """
         if padded_B_slice is None:
             obs_batch = self.observations[T_slice, B_slice]
-            # import pdb; pdb.set_trace()
             critic_obs_batch = obs_batch if self.privileged_observations is None else self.privileged_observations[T_slice, B_slice]
-            hid_batch = (None,None)
+            hid_batch = ActorCriticHiddenState(LstmHiddenState(None,None), LstmHiddenState(None,None))
             obs_mask_batch = None
-
         else:
+            # 获取所有按done分割的轨迹
             obs_batch = self._padded_obs_trajectories[T_slice, padded_B_slice]
             critic_obs_batch = obs_batch if self.privileged_observations is None else self._padded_critic_obs_trajectories[T_slice, padded_B_slice]
-            
             # reshape to [num_envs, time, num layers, hidden dim] (original shape: [time, num_layers, num_envs, hidden_dim])
             # then take only time steps after dones (flattens num envs and time dimensions),
             # take a batch of trajectories and finally reshape back to [num_layers, batch, hidden_dim]
             prev_done_mask = prev_done_mask.permute(1, 0) # (T, B) -> (B, T)
-            hid_a_batch = [saved_hidden_states.permute(2, 0, 1, 3)[prev_done_mask][first_traj:last_traj].transpose(1,0).contiguous()
-                           for saved_hidden_states in self.saved_hidden_states_a]
-            hid_c_batch = [saved_hidden_states.permute(2, 0, 1, 3)[prev_done_mask][first_traj:last_traj].transpose(1,0).contiguous()
-                           for saved_hidden_states in self.saved_hidden_states_c]
-            hid_batch = [hid_a_batch, hid_c_batch]
+            # buffer_method的作用是，对buffer调用method函数
+            hid_batch = buffer_method(
+                buffer_method(
+                    buffer_method(self.saved_hidden_states, "permute", 2, 0, 1, 3)[prev_done_mask][padded_B_slice],
+                    "transpose", 1, 0
+                ),
+                "contiguous",
+            )
             obs_mask_batch = self._trajectory_masks[T_slice, padded_B_slice]
-
 
         action_batch = self.actions[T_slice, B_slice]
         target_value_batch = self.values[T_slice, B_slice]
@@ -264,9 +292,9 @@ class RolloutStorage:
         #     old_mu_batch = old_mu_batch.flatten(0, 1)
         #     old_sigma_batch = old_sigma_batch.flatten(0, 1)
 
-        # import pdb; pdb.set_trace()
+        # print(f"_padded_obs_trajectories.shape = {self._padded_obs_trajectories.shape}")
+        # print(f"obs_batch.shape= {obs_batch.shape}")
 
-        # print(f"obs_batch.shape = {obs_batch.shape}")
         return RolloutStorage.MiniBatch(
             obs_batch, critic_obs_batch,
             action_batch,

@@ -163,9 +163,10 @@ class PPO:
         return mean_losses, average_stats
 
     def compute_losses(self, minibatch):
-        self.actor_critic.act(minibatch.obs, masks=minibatch.masks, hidden_states=minibatch.hidden_states[0])
+        self.actor_critic.act(minibatch.obs, masks=minibatch.masks, hidden_states=minibatch.hidden_states.actor)
         actions_log_prob_batch = self.actor_critic.get_actions_log_prob(minibatch.actions)
-        value_batch = self.actor_critic.evaluate(minibatch.critic_obs, masks=minibatch.masks, hidden_states=minibatch.hidden_states[1])
+        value_batch = self.actor_critic.evaluate(minibatch.critic_obs, masks=minibatch.masks, hidden_states=minibatch.hidden_states.critic)
+
         mu_batch = self.actor_critic.action_mean
         sigma_batch = self.actor_critic.action_std
         try:
