@@ -1,17 +1,22 @@
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
-
+import numpy as np
 
 # 也许可以把torso固定了
 # EnvCfg
 class H1_41RoughCfg(LeggedRobotCfg):
     class terrain(LeggedRobotCfg.terrain):
         # mesh_type = "plane"
-        # measure_heights = True
         num_rows = 2
         num_cols = 2
 
         mesh_type = None
-        selected = "StairTerrain"
+        # selected = "StairTerrain"
+
+        # select height
+        selected = None
+        curriculum = False
+        measure_heights = False
+
         block_width = 6.
         block_length = 6.
         # 网格的横纵尺寸
@@ -19,11 +24,11 @@ class H1_41RoughCfg(LeggedRobotCfg):
         vertical_scale = 0.05  # [m]
         step_width = 0.5
         step_height = 0.25
-        slope_threshold = 1000
+        slope_threshold = 0.75
 
-        static_friction = 0.8
-        dynamic_friction = 0.8
-        restitution = 0.5
+        static_friction = 1.0
+        dynamic_friction = 1.0
+        restitution = 0.0
 
     class env(LeggedRobotCfg.env):
         # 3 + 3 + 3 + 12 + 12 + 12 + 2 = 47
@@ -40,7 +45,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
             "dof_pos",      # 41
             "dof_vel",      # 41
             "last_actions", # 41
-            "forward_depth",
+            # "forward_depth",
         ]
         privileged_obs_components = [
             "lin_vel",      # 3
@@ -51,36 +56,43 @@ class H1_41RoughCfg(LeggedRobotCfg):
             "dof_vel",  # 41
             "last_actions",  # 41
         ]
+        num_envs = 2048
 
     class noise(LeggedRobotCfg.noise):
         add_noise=False
 
-        class noise_scales(LeggedRobotCfg.noise.noise_scales):
-            forward_depth = 0.01
+        # class noise_scales(LeggedRobotCfg.noise.noise_scales):
+        #     forward_depth = 0.01
 
-    # brave to try out
-    class sensor(LeggedRobotCfg):
-        class forward_camera:
-            obs_components = ["forward_depth"]
-            resolution = [int(480/4), int(640/4)]
-            position = [0.0, 0.0, 0.50]
-            rotation = [0.0, 0.0, 0.0]
-            resized_resolution = [48, 64]
-            output_resolution = [48, 64]
-            horizontal_fov = [86, 90]
-            crop_top_bottom = [int(48/4), 0]
-            crop_left_right = [int(28/4), int(36/4)]
-            near_plane = 0.05
-            depth_range = [0.0, 3.0]
+    # camera configs
+    # class sensor(LeggedRobotCfg):
+    #     class forward_camera:
+    #         obs_components = ["forward_depth"]
+    #         resolution = [int(480/4), int(640/4)]
+    #         position = [0.0, 0.0, 0.50]
+    #         rotation = [0.0, 0.0, 0.0]
+    #         resized_resolution = [48, 64]
+    #         output_resolution = [48, 64]
+    #         horizontal_fov = [86, 90]
+    #         crop_top_bottom = [int(48/4), 0]
+    #         crop_left_right = [int(28/4), int(36/4)]
+    #         near_plane = 0.05
+    #         depth_range = [0.0, 3.0]
+    #
+    #         latency_range = [0.08, 0.142]
+    #         latency_resampling_time = 5.0
+    #         refresh_duration = 1/10 # [s]
+    #
+    #     class proprioception:
+    #         obs_components = ["ang_vel", "projected_gravity", "commands", "dof_pos", "dof_vel"]
+    #         latency_range = [0.005, 0.045] # [s]
+    #         latency_resampling_time = 5.0 # [s]
 
-            latency_range = [0.08, 0.142]
-            latency_resampling_time = 5.0
-            refresh_duration = 1/10 # [s]
+    # class viewer(LeggedRobotCfg.viewer):
+        # debug_viz = True
+        # draw_sensors = True
+        # draw_volume_sample_points = True
 
-        class proprioception:
-            obs_components = ["ang_vel", "projected_gravity", "commands", "dof_pos", "dof_vel"]
-            latency_range = [0.005, 0.045] # [s]
-            latency_resampling_time = 5.0 # [s]
 
     class init_state(LeggedRobotCfg.init_state):
         pos = [0.0, 0.0, 1.05]  # x,y,z [m]
@@ -206,15 +218,22 @@ class H1_41RoughCfg(LeggedRobotCfg):
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
         # decimation: Number of control action updates @ sim DT per policy DT
-        decimation = 8
+        decimation = 1
 
     class sim(LeggedRobotCfg.sim):
         dt = 0.0025
-        no_camera = False
+        no_camera = True
 
-    class normalization(LeggedRobotCfg.normalization):
-        class obs_scales(LeggedRobotCfg.normalization.obs_scales):
-            forward_depth = 1.0
+        # # draw body points
+        body_measure_points = { # transform are related to body frame
+            "hip": dict(
+                x= [i for i in np.arange(-0.24, 0.41, 0.03)],
+                y= [-0.08, -0.04, 0.0, 0.04, 0.08],
+                z= [i for i in np.arange(-0.061, 0.071, 0.03)],
+                transform= [0., 0., 0.005, 0., 0., 0.],
+            ),
+        }
+
 
     class domain_rand(LeggedRobotCfg.domain_rand):
         randomize_friction = True
@@ -268,7 +287,6 @@ class H1_41RoughCfg(LeggedRobotCfg):
             # contact_no_vel = -0.2
             # feet_swing_height = -20.0
             # contact = 0.18
-
             tracking_lin_vel = 1.0
             tracking_ang_vel = 0.5
             lin_vel_z = -2.0
@@ -304,10 +322,10 @@ class H1_41RoughCfgPPO(LeggedRobotCfgPPO):
         entropy_coef = 1e-2
 
     class runner(LeggedRobotCfgPPO.runner):
-        # policy_class_name = "ActorCritic"
-        policy_class_name = "ActorCriticRecurrent"
+        policy_class_name = "ActorCritic"
+        # policy_class_name = "ActorCriticRecurrent"
         # policy_class_name = "TriActCritic"
         algorithm_class_name = "PPO"
-        max_iterations = 10000
+        max_iterations = 1000
         run_name = ''
         experiment_name = 'h1_41'

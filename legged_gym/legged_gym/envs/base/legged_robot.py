@@ -368,12 +368,12 @@ class LeggedRobot(BaseTask):
         depth_list = self.sensor_tensor_dict["forward_depth"]
         forward_tensor = torch.stack(depth_list).flatten(start_dim= 1)
 
-        depth_img = depth_list[0].clone()
-        depth_img[depth_img<-20] = -20
-        norm_depth_img = (255.0 * (depth_img / torch.min(depth_img - 1e-4))).cpu().numpy()
-        normalized_depth_image = Image.fromarray(norm_depth_img.astype(np.uint8), mode="L")
-        normalized_depth_image.save(os.path.join(LEGGED_GYM_ROOT_DIR, "imgs",  f'frameno_{self.frame_no}_env0.jpg'))
-        import pdb; pdb.set_trace()
+        # depth_img = depth_list[0].clone()
+        # depth_img[depth_img<-20] = -20
+        # norm_depth_img = (255.0 * (depth_img / torch.min(depth_img - 1e-4))).cpu().numpy()
+        # normalized_depth_image = Image.fromarray(norm_depth_img.astype(np.uint8), mode="L")
+        # normalized_depth_image.save(os.path.join(LEGGED_GYM_ROOT_DIR, "imgs",  f'frameno_{self.frame_no}_env0.jpg'))
+        # import pdb; pdb.set_trace()
         # print(f"forward_tensor = {forward_tensor.shape}")
         return forward_tensor
 
@@ -454,7 +454,7 @@ class LeggedRobot(BaseTask):
             self.cfg.env.obs_components,
             privileged= False,
         )
-        print(f"self.obs_buf= {self.obs_buf.shape}")
+        # print(f"self.obs_buf= {self.obs_buf.shape}")
         if hasattr(self.cfg.env, "privileged_obs_components"):
             self.privileged_obs_buf = self._get_obs_from_components(
                 self.cfg.env.privileged_obs_components,
@@ -1452,10 +1452,10 @@ class LeggedRobot(BaseTask):
             self._create_ground_plane()
         else:
             terrain_cls = self.cfg.terrain.selected
-            print("==="*20)
-            print(f"terrain_cls = {terrain_cls}")
+            # print("==="*20)
+            # print(f"terrain_cls = {terrain_cls}")
             self.terrain = get_terrain_cls(terrain_cls)(self.cfg.terrain, self.num_envs)
-            print("="*10,"vertices+triangles")
+            # print("="*10,"vertices+triangles")
             # print(self.terrain.vertices, self.terrain.triangles)
             self.terrain.add_terrain_to_sim(self.gym, self.sim, self.device)
 
@@ -1583,6 +1583,7 @@ class LeggedRobot(BaseTask):
         if getattr(self.cfg.viewer, "draw_height_measurements", False):
             self._draw_height_measurements_vis()
         if getattr(self.cfg.viewer, "draw_sensors", False):
+            print("draw sensors")
             for env_h, sensor_hd in zip(self.envs, self.sensor_handles):
                 self._draw_sensor_vis(env_h, sensor_hd)
         if getattr(self.cfg.viewer, "draw_sensor_readings", False):

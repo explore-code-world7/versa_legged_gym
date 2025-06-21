@@ -93,7 +93,7 @@ class StairTerrain:
                 height_field[base_rows+2*self.block_rows:base_rows+3*self.block_rows, base_cols:2*base_cols+self.block_cols] += stair_scale_height
                 # height_field[base_rows+2*self.block_rows:base_rows+3*self.block_rows, base_cols+self.block_cols:base_cols+2*self.block_cols] += stair_scale_height
 
-                height_field[base_rows+self.block_rows:base_rows+2*self.block_rows, base_cols+self.block_cols:base_cols+2*self.block_cols] = self.generate_stair(self.step_width, - self.step_height)
+                height_field[base_rows+self.block_rows:base_rows+2*self.block_rows, base_cols+self.block_cols:base_cols+2*self.block_cols] = self.generate_stair(self.step_width, - self.step_height)+2*stair_scale_height
 
                 height_field[base_rows:base_rows+self.block_rows, base_cols+self.block_cols:base_cols+2*self.block_cols] += 2*stair_scale_height
 

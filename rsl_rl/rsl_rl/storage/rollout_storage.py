@@ -117,22 +117,20 @@ class RolloutStorage:
         self.step += 1
 
     def _save_hidden_states(self, hidden_states):
-        """ Assuming hidden_states is a torch tensor or a namedarraytuple of torch tensor """
-        if hidden_states is None:
+        if hidden_states is None or hidden_states==(None, None):
             return
-        if is_namedarraytuple(hidden_states):
-            try:
-                leading_dims = hidden_states.get_leading_dims()
-            except AttributeError as e:
-                if "None" in str(e):
-                    return
+        # make a tuple out of GRU hidden state sto match the LSTM format
+        hid_a = hidden_states[0] if isinstance(hidden_states[0], tuple) else (hidden_states[0],)
+        hid_c = hidden_states[1] if isinstance(hidden_states[1], tuple) else (hidden_states[1],)
 
-        # initialize if needed 
-        if self.saved_hidden_states is None:
-            self.saved_hidden_states = buffer_from_example(hidden_states, self.observations.shape[0])
+        # initialize if needed
+        if self.saved_hidden_states_a is None:
+            self.saved_hidden_states_a = [torch.zeros(self.observations.shape[0], *hid_a[i].shape, device=self.device) for i in range(len(hid_a))]
+            self.saved_hidden_states_c = [torch.zeros(self.observations.shape[0], *hid_c[i].shape, device=self.device) for i in range(len(hid_c))]
         # copy the states
-        self.saved_hidden_states[self.step] = hidden_states
-
+        for i in range(len(hid_a)):
+            self.saved_hidden_states_a[i][self.step].copy_(hid_a[i])
+            self.saved_hidden_states_c[i][self.step].copy_(hid_c[i])
 
     def clear(self):
         self.step = 0
@@ -165,6 +163,9 @@ class RolloutStorage:
         batch_size = self.num_envs * self.num_transitions_per_env
         mini_batch_size = batch_size // num_mini_batches
         indices = torch.randperm(num_mini_batches*mini_batch_size, requires_grad=False, device=self.device)
+        # 什么是T_indices+B_indices
+        # T_indices: transition indice of selected env
+        # B_indices: batch indice of selected env
         T_indices = (indices // self.num_envs).to(torch.long)
         B_indices = (indices % self.num_envs).to(torch.long)
 
@@ -221,9 +222,11 @@ class RolloutStorage:
         """
         if padded_B_slice is None:
             obs_batch = self.observations[T_slice, B_slice]
+            # import pdb; pdb.set_trace()
             critic_obs_batch = obs_batch if self.privileged_observations is None else self.privileged_observations[T_slice, B_slice]
-            hid_batch = None
+            hid_batch = (None,None)
             obs_mask_batch = None
+
         else:
             obs_batch = self._padded_obs_trajectories[T_slice, padded_B_slice]
             critic_obs_batch = obs_batch if self.privileged_observations is None else self._padded_critic_obs_trajectories[T_slice, padded_B_slice]
@@ -232,15 +235,14 @@ class RolloutStorage:
             # then take only time steps after dones (flattens num envs and time dimensions),
             # take a batch of trajectories and finally reshape back to [num_layers, batch, hidden_dim]
             prev_done_mask = prev_done_mask.permute(1, 0) # (T, B) -> (B, T)
-            hid_batch = buffer_method(
-                buffer_method(
-                    buffer_method(self.saved_hidden_states, "permute", 2, 0, 1, 3)[prev_done_mask][padded_B_slice],
-                    "transpose", 1, 0
-                ),
-                "contiguous",
-            )
+            hid_a_batch = [saved_hidden_states.permute(2, 0, 1, 3)[prev_done_mask][first_traj:last_traj].transpose(1,0).contiguous()
+                           for saved_hidden_states in self.saved_hidden_states_a]
+            hid_c_batch = [saved_hidden_states.permute(2, 0, 1, 3)[prev_done_mask][first_traj:last_traj].transpose(1,0).contiguous()
+                           for saved_hidden_states in self.saved_hidden_states_c]
+            hid_batch = [hid_a_batch, hid_c_batch]
             obs_mask_batch = self._trajectory_masks[T_slice, padded_B_slice]
- 
+
+
         action_batch = self.actions[T_slice, B_slice]
         target_value_batch = self.values[T_slice, B_slice]
         return_batch = self.returns[T_slice, B_slice]
@@ -249,19 +251,22 @@ class RolloutStorage:
         old_mu_batch = self.mu[T_slice, B_slice]
         old_sigma_batch = self.sigma[T_slice, B_slice]
 
-        if padded_B_slice is None:
-            # flatten the trajectory sample if not recurrent
-            obs_batch = obs_batch.flatten(0, 1)
-            critic_obs_batch = critic_obs_batch.flatten(0, 1)
-            
-            action_batch = action_batch.flatten(0, 1)
-            target_value_batch = target_value_batch.flatten(0, 1)
-            return_batch = return_batch.flatten(0, 1)
-            old_action_log_prob_batch = old_action_log_prob_batch.flatten(0, 1)
-            advantage_batch = advantage_batch.flatten(0, 1)
-            old_mu_batch = old_mu_batch.flatten(0, 1)
-            old_sigma_batch = old_sigma_batch.flatten(0, 1)
+        # if padded_B_slice is None:
+        #     # flatten the trajectory sample if not recurrent
+        #     obs_batch = obs_batch.flatten(0, 1)
+        #     critic_obs_batch = critic_obs_batch.flatten(0, 1)
+        #
+        #     action_batch = action_batch.flatten(0, 1)
+        #     target_value_batch = target_value_batch.flatten(0, 1)
+        #     return_batch = return_batch.flatten(0, 1)
+        #     old_action_log_prob_batch = old_action_log_prob_batch.flatten(0, 1)
+        #     advantage_batch = advantage_batch.flatten(0, 1)
+        #     old_mu_batch = old_mu_batch.flatten(0, 1)
+        #     old_sigma_batch = old_sigma_batch.flatten(0, 1)
 
+        # import pdb; pdb.set_trace()
+
+        # print(f"obs_batch.shape = {obs_batch.shape}")
         return RolloutStorage.MiniBatch(
             obs_batch, critic_obs_batch,
             action_batch,

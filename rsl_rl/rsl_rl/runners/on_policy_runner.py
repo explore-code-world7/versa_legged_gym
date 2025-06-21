@@ -62,6 +62,8 @@ class OnPolicyRunner:
             self.policy_cfg,
         ).to(self.device)
 
+        # import pdb; pdb.set_trace()
+
         alg_class = getattr(algorithms, self.cfg["algorithm_class_name"]) # PPO
         self.alg: algorithms.PPO = alg_class(actor_critic, device=self.device, **self.alg_cfg)
         

@@ -88,7 +88,8 @@ class ActorCriticRecurrent(ActorCritic):
         return super().evaluate(input_c)
     
     def get_hidden_states(self):
-        return ActorCriticHiddenState(self.memory_a.hidden_states, self.memory_c.hidden_states)
+        # return ActorCriticHiddenState(self.memory_a.hidden_states, self.memory_c.hidden_states)
+        return self.memory_a.hidden_states, self.memory_c.hidden_states
 
 LstmHiddenState = namedarraytuple('LstmHiddenState', ['hidden', 'cell'])
 
@@ -104,19 +105,20 @@ class Memory(torch.nn.Module):
         batch_mode = hidden_states is not None
         if batch_mode:
             # batch mode (policy update): need saved hidden states
-            if is_namedarraytuple(hidden_states):
-                hidden_states = tuple(hidden_states)
+            # if is_namedarraytuple(hidden_states):
+            #     hidden_states = tuple(hidden_states)
+            # import pdb;     pdb.set_trace()
             out, _ = self.rnn(input, hidden_states)
             if not masks is None:
                 # in this case, user can choose whether to unpad the output or not
                 out = unpad_trajectories(out, masks)
         else:
             # inference mode (collection): use hidden states of last step
-            if is_namedarraytuple(self.hidden_states):
-                self.hidden_states = tuple(self.hidden_states)
+            # if is_namedarraytuple(self.hidden_states):
+            #     self.hidden_states = tuple(self.hidden_states)
             out, self.hidden_states = self.rnn(input.unsqueeze(0), self.hidden_states)
-            if isinstance(self.hidden_states, tuple):
-                self.hidden_states = LstmHiddenState(*self.hidden_states)
+            # if isinstance(self.hidden_states, tuple):
+            #     self.hidden_states = LstmHiddenState(*self.hidden_states)
             out = out.squeeze(0) # remove the time dimension
         return out
 

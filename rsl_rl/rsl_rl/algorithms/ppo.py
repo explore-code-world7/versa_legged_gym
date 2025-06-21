@@ -115,6 +115,7 @@ class PPO:
         if 'time_outs' in infos:
             self.transition.rewards += self.gamma * torch.squeeze(self.transition.values * infos['time_outs'].unsqueeze(1).to(self.device), 1)
 
+        print(f"obs.shape = {self.transition.observations.shape}")
         # Record the transition
         self.storage.add_transitions(self.transition)
         self.transition.clear()
@@ -133,7 +134,7 @@ class PPO:
         else:
             generator = self.storage.mini_batch_generator(self.num_mini_batches, self.num_learning_epochs)
         for minibatch in generator:
-
+                # import pdb; pdb.set_trace()
                 losses, _, stats = self.compute_losses(minibatch)
 
                 loss = 0.
@@ -162,9 +163,9 @@ class PPO:
         return mean_losses, average_stats
 
     def compute_losses(self, minibatch):
-        self.actor_critic.act(minibatch.obs, masks=minibatch.masks, hidden_states=minibatch.hidden_states.actor)
+        self.actor_critic.act(minibatch.obs, masks=minibatch.masks, hidden_states=minibatch.hidden_states[0])
         actions_log_prob_batch = self.actor_critic.get_actions_log_prob(minibatch.actions)
-        value_batch = self.actor_critic.evaluate(minibatch.critic_obs, masks=minibatch.masks, hidden_states=minibatch.hidden_states.critic)
+        value_batch = self.actor_critic.evaluate(minibatch.critic_obs, masks=minibatch.masks, hidden_states=minibatch.hidden_states[1])
         mu_batch = self.actor_critic.action_mean
         sigma_batch = self.actor_critic.action_std
         try:

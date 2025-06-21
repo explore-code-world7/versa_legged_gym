@@ -195,7 +195,6 @@ class H1_41Robot(LeggedRobot):
 
         return super()._post_physics_step_callback()
     
-    
     # def compute_observations(self):
     #     """ Computes observations
     #     """
@@ -209,7 +208,7 @@ class H1_41Robot(LeggedRobot):
     #                                 (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
     #                                 self.dof_vel * self.obs_scales.dof_vel,
     #                                 self.actions,
-    #                                 # sin_phase,
+    #                                 # sin_phase, comand f
     #                                 # cos_phase
     #                                 ),dim=-1)
     #     self.privileged_obs_buf = torch.cat((
@@ -258,7 +257,6 @@ class H1_41Robot(LeggedRobot):
     
     def _reward_hip_pos(self):
         return torch.sum(torch.square(self.dof_pos[:,[0,2,6,8]]), dim=1)
-
 
     # def _reward_hand_sup(self):
     #     """

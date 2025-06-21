@@ -4,7 +4,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from .actor_critic import ActorCritic
-from .actor_critic_recurrent import ActorCriticRecurrent, ActorCriticHiddenState
+from .actor_critic_recurrent import ActorCriticRecurrent
+from .actor_critic_recurrent import ActorCriticHiddenState
 from rsl_rl.modules.mlp import MlpModel
 from rsl_rl.modules.actor_critic_recurrent import Memory
 from rsl_rl.utils import unpad_trajectories

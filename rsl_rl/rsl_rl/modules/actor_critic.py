@@ -34,6 +34,9 @@ import torch
 import torch.nn as nn
 from torch.distributions import Normal
 from torch.nn.modules import rnn
+from rsl_rl.utils.collections import namedarraytuple, is_namedarraytuple
+
+ActorCriticHiddenState = namedarraytuple('ActorCriticHiddenState', ['actor', 'critic'])
 
 class ActorCritic(nn.Module):
     is_recurrent = False
@@ -150,6 +153,11 @@ class ActorCritic(nn.Module):
     @torch.no_grad()
     def clip_std(self, min= None, max= None):
         self.std.copy_(self.std.clip(min= min, max= max))
+
+    def get_hidden_states(self):
+        # return ActorCriticHiddenState(self.memory_a.hidden_states, self.memory_c.hidden_states)
+        return None, None
+
 
 def get_activation(act_name):
     if act_name == "elu":
