@@ -10,7 +10,7 @@ from isaacgym.terrain_utils import *
 
 # import matplotlib.pyplot as plt
 
-class StairTerrain:
+class PlaneTerrain:
     def __init__(self, cfg: LeggedRobotCfg.terrain, num_envs) -> None:
         self.cfg = cfg
         # self.num_robots = num_robots
@@ -19,12 +19,13 @@ class StairTerrain:
         #     return
         self.env_length = cfg.terrain_length
         self.env_width = cfg.terrain_width
-        self.envs_per_row = cfg.num_rows
-        self.envs_per_col = cfg.num_cols
-
         self.horizontal_scale = cfg.horizontal_scale
         self.vertical_scale = cfg.vertical_scale
         self.slope_threshold = cfg.slope_threshold
+
+        self.envs_per_row = cfg.num_rows
+        self.envs_per_col = cfg.num_cols
+
         self.step_width = cfg.step_width
         self.step_height = cfg.step_height
 
@@ -47,7 +48,7 @@ class StairTerrain:
         self.block_length = cfg.block_length
         self.stair_height = int((self.block_width/(self.step_width/self.horizontal_scale))*(self.step_height/self.vertical_scale))
 
-        self.heightsamples = self.generate_stair_terrain()
+        self.heightsamples = self.generate_plane_terrain()
         self.heightfield_raw_pyt = torch.tensor(self.heightsamples, device= "cpu")
 
         # if self.type=="trimesh":
@@ -68,7 +69,7 @@ class StairTerrain:
         #     print(f"self.vertices = {np.unique(self.vertices[..., 2])}")
         #     # vertices: [x, y, z]
 
-    def generate_stair_terrain(self):
+    def generate_plane_terrain(self):
         # Return : pixel height of terrain
         print(self.block_width)
         print(self.horizontal_scale)
@@ -77,48 +78,25 @@ class StairTerrain:
         # print(self.envs_per_row, self.block_rows)
         height_field = np.zeros((3*self.envs_per_row*self.block_rows, 2*self.envs_per_col*self.block_cols))
 
-        # 为什么height_field_raw这么大?
-        for i in range(self.envs_per_row):
-            for j in range(self.envs_per_col):
-                base_rows = i*3*self.block_rows
-                base_cols = j*2*self.block_cols
+        # # 为什么height_field_raw这么大?
+        # for i in range(self.envs_per_row):
+        #     for j in range(self.envs_per_col):
+        #         base_rows = i*3*self.block_rows
+        #         base_cols = j*2*self.block_cols
+        #
+        #         # configue real width and length of block, with width and length of stair following
+        #         height_field[base_rows+self.block_rows:base_rows+2*self.block_rows, base_cols:base_cols+self.block_cols] = self.generate_stair(self.step_width, self.step_height)
+        #
+        #         stair_scale_height = np.max(height_field[base_rows+self.block_rows:base_rows+2*self.block_rows, base_cols:base_cols+self.block_cols])
+        #         # print(f"stair_height = {stair_scale_height}")
+        #
+        #         height_field[base_rows+2*self.block_rows:base_rows+3*self.block_rows, base_cols:2*base_cols+self.block_cols] += stair_scale_height
+        #         # height_field[base_rows+2*self.block_rows:base_rows+3*self.block_rows, base_cols+self.block_cols:base_cols+2*self.block_cols] += stair_scale_height
+        #
+        #         height_field[base_rows+self.block_rows:base_rows+2*self.block_rows, base_cols+self.block_cols:base_cols+2*self.block_cols] = self.generate_stair(self.step_width, - self.step_height)+2*stair_scale_height
+        #
+        #         height_field[base_rows:base_rows+self.block_rows, base_cols+self.block_cols:base_cols+2*self.block_cols] += 2*stair_scale_height
 
-                # configue real width and length of block, with width and length of stair following
-                height_field[base_rows+self.block_rows:base_rows+2*self.block_rows, base_cols:base_cols+self.block_cols] = self.generate_stair(self.step_width, self.step_height)
-
-                stair_scale_height = np.max(height_field[base_rows+self.block_rows:base_rows+2*self.block_rows, base_cols:base_cols+self.block_cols])
-                # print(f"stair_height = {stair_scale_height}")
-
-                height_field[base_rows+2*self.block_rows:base_rows+3*self.block_rows, base_cols:2*base_cols+self.block_cols] += stair_scale_height
-                # height_field[base_rows+2*self.block_rows:base_rows+3*self.block_rows, base_cols+self.block_cols:base_cols+2*self.block_cols] += stair_scale_height
-
-                height_field[base_rows+self.block_rows:base_rows+2*self.block_rows, base_cols+self.block_cols:base_cols+2*self.block_cols] = self.generate_stair(self.step_width, - self.step_height)+2*stair_scale_height
-
-                height_field[base_rows:base_rows+self.block_rows, base_cols+self.block_cols:base_cols+2*self.block_cols] += 2*stair_scale_height
-
-        return height_field
-
-
-    # @staticmethod
-    def generate_stair(self, step_width, step_height):
-
-        height_field = np.zeros((self.block_rows, self.block_cols))
-
-        _step_width = int(step_width / self.horizontal_scale)
-        # 0.5/0.05=10
-        _step_height = int(step_height / self.vertical_scale)
-
-        num_steps = int(self.env_width / step_width)
-        # 120/10=12;
-        height = _step_height  # step height在前面已经改变
-
-        # 总共 12*0.25 = 3;
-        # 对应的scale的级数 = 3/0.05=60
-        for i in range(num_steps):
-            height_field[i * _step_width: (i + 1) * _step_width, :] += height
-            height += _step_height
-
-        # import pdb; pdb.set_trace()
         return height_field
 
 

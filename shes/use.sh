@@ -15,7 +15,7 @@ python  legged_gym/legged_gym/scripts/train.py  --task=h1_41  --headless  --max_
 python  legged_gym/legged_gym/scripts/train.py  --task=h1_41  --headless --load_run="Jun17_17-20-54_lstm_256"  --checkpoint=-1  --resume  --sim_dev cuda:2  --rl_device cuda:3  --max_iterations=1000
 
 # play
-python  legged_gym/legged_gym/scripts/play.py  --task=h1_41  --load_run="Jun17_19-30-01_lstm_256" --checkpoint=-1 --num_envs=4
+python  legged_gym/legged_gym/scripts/play.py  --task=h1_41  --load_run="Jun21_14-41-38_" --checkpoint=-1 --num_envs=4
 
 python  legged_gym/legged_gym/scripts/play.py  --task=h1_41  --load_run="Jun15_22-21-22_no_lstm" --checkpoint=-1 --num_envs=4
 

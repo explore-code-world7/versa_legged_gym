@@ -679,7 +679,7 @@ class LeggedRobot(BaseTask):
             self.commands[:, 2] = torch.clip(0.5*wrap_to_pi(self.commands[:, 3] - heading), -1., 1.)
 
         # log max power across current env step
-        self.max_power_per_timestep = torch.maximum(
+        self.max_power_per_timestep = torch.minimum(
             self.max_power_per_timestep,
             torch.max(torch.sum(self.substep_torques * self.substep_dof_vel, dim= -1), dim= -1)[0],
         )
@@ -926,6 +926,7 @@ class LeggedRobot(BaseTask):
         noise_vec[:] = self.cfg.noise.noise_scales.lin_vel * self.cfg.noise.noise_level * self.obs_scales.lin_vel
 
     def _write_ang_vel_noise(self, noise_vec):
+        # print("noise_ang_vel",self.cfg.noise.noise_scales.ang_vel, self.cfg.noise.noise_level, self.obs_scales.ang_vel)
         noise_vec[:] = self.cfg.noise.noise_scales.ang_vel * self.cfg.noise.noise_level * self.obs_scales.ang_vel
     
     def _write_projected_gravity_noise(self, noise_vec):
@@ -1452,11 +1453,7 @@ class LeggedRobot(BaseTask):
             self._create_ground_plane()
         else:
             terrain_cls = self.cfg.terrain.selected
-            # print("==="*20)
-            # print(f"terrain_cls = {terrain_cls}")
             self.terrain = get_terrain_cls(terrain_cls)(self.cfg.terrain, self.num_envs)
-            # print("="*10,"vertices+triangles")
-            # print(self.terrain.vertices, self.terrain.triangles)
             self.terrain.add_terrain_to_sim(self.gym, self.sim, self.device)
 
     def _get_env_origins(self):
@@ -1758,6 +1755,7 @@ class LeggedRobot(BaseTask):
     def _reward_base_height(self):
         # Penalize base height away from target
         base_height = torch.mean(self.root_states[:, 2].unsqueeze(1) - self.measured_heights, dim=1)
+        # print(f"base_height={base_height.max(), base_height.min()}")
         return torch.square(base_height - self.cfg.rewards.base_height_target)
     
     def _reward_torques(self):

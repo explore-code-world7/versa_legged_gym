@@ -5,6 +5,7 @@ terrain_registry = dict(
     BarrierTrack= "legged_gym.utils.terrain.barrier_track:BarrierTrack",
     TerrainPerlin= "legged_gym.utils.terrain.perlin:TerrainPerlin",
     StairTerrain="legged_gym.utils.terrain.stair_terrain:StairTerrain",
+    PlaneTerrain="legged_gym.utils.terrain.plane_terrain:PlaneTerrain",
 )
 
 def get_terrain_cls(terrain_cls):

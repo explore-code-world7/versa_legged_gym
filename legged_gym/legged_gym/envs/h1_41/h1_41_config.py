@@ -4,18 +4,51 @@ import numpy as np
 # 也许可以把torso固定了
 # EnvCfg
 class H1_41RoughCfg(LeggedRobotCfg):
+    class termination:
+        # additional factors that determines whether to terminates the episode
+        termination_terms = [
+            "roll",
+            "pitch",
+            "z_low",
+            "z_high",
+            # "out_of_track",
+        ]
+
+        roll_kwargs = dict(
+            threshold= 0.8, # [rad]
+            tilt_threshold= 1.5,
+        )
+        pitch_kwargs = dict(
+            threshold= 1.6, # [rad] # for leap, jump
+            jump_threshold= 1.6,
+            leap_threshold= 1.5,
+        )
+        z_low_kwargs = dict(
+            threshold= 0.15, # [m]
+        )
+        z_high_kwargs = dict(
+            threshold= 1.5, # [m]
+        )
+        out_of_track_kwargs = dict(
+            threshold= 1., # [m]
+        )
+
+        check_obstacle_conditioned_threshold = True
+        timeout_at_border = False
+
     class terrain(LeggedRobotCfg.terrain):
         # mesh_type = "plane"
-        num_rows = 2
-        num_cols = 2
-
         mesh_type = None
-        # selected = "StairTerrain"
+        selected = "PlaneTerrain"
 
         # select height
-        selected = None
+        # selected = None
         curriculum = False
         measure_heights = False
+
+        # terrain_kwargs = {
+        #
+        # }
 
         block_width = 6.
         block_length = 6.
@@ -25,6 +58,11 @@ class H1_41RoughCfg(LeggedRobotCfg):
         step_width = 0.5
         step_height = 0.25
         slope_threshold = 0.75
+
+        terrain_length = block_length*2
+        terrain_width = block_width*3
+        num_rows = 2
+        num_cols = 2
 
         static_friction = 1.0
         dynamic_friction = 1.0
@@ -88,8 +126,8 @@ class H1_41RoughCfg(LeggedRobotCfg):
     #         latency_range = [0.005, 0.045] # [s]
     #         latency_resampling_time = 5.0 # [s]
 
-    # class viewer(LeggedRobotCfg.viewer):
-        # debug_viz = True
+    class viewer(LeggedRobotCfg.viewer):
+        debug_viz = False
         # draw_sensors = True
         # draw_volume_sample_points = True
 
@@ -218,7 +256,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
         # decimation: Number of control action updates @ sim DT per policy DT
-        decimation = 1
+        decimation = 2
 
     class sim(LeggedRobotCfg.sim):
         dt = 0.0025
@@ -287,6 +325,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
             # contact_no_vel = -0.2
             # feet_swing_height = -20.0
             # contact = 0.18
+
             tracking_lin_vel = 1.0
             tracking_ang_vel = 0.5
             lin_vel_z = -2.0

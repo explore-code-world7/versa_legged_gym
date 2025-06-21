@@ -115,7 +115,7 @@ class PPO:
         if 'time_outs' in infos:
             self.transition.rewards += self.gamma * torch.squeeze(self.transition.values * infos['time_outs'].unsqueeze(1).to(self.device), 1)
 
-        print(f"obs.shape = {self.transition.observations.shape}")
+
         # Record the transition
         self.storage.add_transitions(self.transition)
         self.transition.clear()
