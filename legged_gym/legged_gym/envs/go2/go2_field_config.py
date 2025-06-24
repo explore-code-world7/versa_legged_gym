@@ -16,8 +16,9 @@ class Go2FieldCfg( Go2RoughCfg ):
             latency_range = [0.005, 0.045] # [s]
 
     class terrain( Go2RoughCfg.terrain ):
-        num_rows = 10
-        num_cols = 40
+        num_rows = 40
+        # 这告诉我们，一个(地形，难度)只要设置一个env即可
+        num_cols = 10
         selected = "BarrierTrack"
         slope_treshold = 20.
 
@@ -28,15 +29,15 @@ class Go2FieldCfg( Go2RoughCfg ):
         BarrierTrack_kwargs = dict(
             options= [
                 "jump",
-                "leap",
-                "hurdle",
-                "down",
-                "tilted_ramp",
-                "stairsup",
-                "stairsdown",
-                "discrete_rect",
-                "slope",
-                "wave",
+                # "leap",
+                # "hurdle",
+                # "down",
+                # "tilted_ramp",
+                # "stairsup",
+                # "stairsdown",
+                # "discrete_rect",
+                # "slope",
+                # "wave",
             ], # each race track will permute all the options
             jump= dict(
                 height= [0.05, 0.5],
@@ -197,7 +198,7 @@ class Go2FieldCfgPPO( Go2RoughCfgPPO ):
 
         resume = True
         load_run = osp.join(logs_root, "rough_go2",
-            "{Your trained walking model directory}",
+            "Jun14_22-39-04_Go2Rough_pEnergy-2e-05_pDofErr-1e-02_pDofErrN-1e+00_pStand-2e+00_noResume",
         )
 
         run_name = "".join(["Go2_",
@@ -224,6 +225,6 @@ class Go2FieldCfgPPO( Go2RoughCfgPPO ):
         ])
 
         max_iterations = 38000
-        save_interval = 10000
+        save_interval = 100
         log_interval = 100
         

@@ -6,7 +6,7 @@ from scipy import interpolate
 from isaacgym import terrain_utils
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg
 from isaacgym.terrain_utils import *
-
+from legged_gym.utils.terrain.perlin import TerrainPerlin
 
 # import matplotlib.pyplot as plt
 
@@ -28,6 +28,9 @@ class PlaneTerrain:
 
         self.step_width = cfg.step_width
         self.step_height = cfg.step_height
+
+        self.add_noise = cfg.add_noise
+        self.noise_limit = cfg.noise_limit
 
         # self.proportions = [np.sum(cfg.terrain_proportions[:i+1]) for i in range(len(cfg.terrain_proportions))]
         #
@@ -76,7 +79,11 @@ class PlaneTerrain:
         self.block_rows = int(self.block_width/self.horizontal_scale)
         self.block_cols = int(self.block_length/self.horizontal_scale)
         # print(self.envs_per_row, self.block_rows)
-        height_field = np.zeros((3*self.envs_per_row*self.block_rows, 2*self.envs_per_col*self.block_cols))
+        height_field = np.zeros((self.envs_per_row*self.block_rows, self.envs_per_col*self.block_cols))
+
+        if self.add_noise is not None:
+            heightsample_noise = np.random.uniform(-self.noise_limit, self.noise_limit, size = height_field.shape)
+            height_field += heightsample_noise
 
         # # 为什么height_field_raw这么大?
         # for i in range(self.envs_per_row):

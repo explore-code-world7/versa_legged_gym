@@ -8,6 +8,8 @@ from legged_gym.utils import trimesh
 from legged_gym.utils.terrain.perlin import TerrainPerlin
 from legged_gym.utils.console import colorize
 
+# 分别给border & track添加noise
+
 class BarrierTrack:
     # default kwargs
     track_kwargs = dict(
@@ -123,7 +125,7 @@ class BarrierTrack:
             no_perlin_threshold= 0.02, # If the perlin noise is too small, clip it to zero.
             walk_in_skill_gap= False, # If True, obstacle ID will be walk when the distance to the obstacle does not reach engaging_next_threshold
         )
-    block_info_dim = 2 # size along x-axis, obstacle_critical_params (constant after initialization)
+    block_info_dim = 2 # size(depth) along x-axis, obstacle_critical_params (constant after initialization)
     max_track_options = 200 # make track options at most 200 types, which means max track id is 199
     track_options_id_dict = {
         "tilt": 1,
@@ -148,6 +150,8 @@ class BarrierTrack:
         assert self.cfg.mesh_type is None, "Not implemented for mesh_type other than None, get {}".format(self.cfg.mesh_type)
         assert getattr(self.cfg, "BarrierTrack_kwargs", None) is not None, "Must provide BarrierTrack_kwargs in cfg.terrain"
 
+        # print(self.cfg.num_rows, self.cfg.num_cols)
+        # 用cfg.BarrierTrack_kwargs更新 self.track_kwargs
         for k, v in self.track_kwargs.items():
             if not k in self.cfg.BarrierTrack_kwargs:
                 continue
@@ -162,6 +166,8 @@ class BarrierTrack:
             ))
 
         self.env_origins = np.zeros((self.cfg.num_rows, self.cfg.num_cols, 3), dtype= np.float32)
+
+        # print(self.cfg.num_rows, self.cfg.num_cols)
 
     def initialize_track_info_buffer(self):
         """ Build buffers to store oracle info for each track blocks so that it is faster to compute
@@ -217,7 +223,7 @@ class BarrierTrack:
         self.track_resolution = (
             np.ceil(self.track_kwargs["track_block_length"] * self.n_blocks_per_track / self.cfg.horizontal_scale).astype(int),
             np.ceil(self.track_kwargs["track_width"] / self.cfg.horizontal_scale).astype(int),
-        ) # a track consist of a connected track_blocks
+        ) # f
         self.env_block_length = self.track_kwargs["track_block_length"]
         self.env_length = self.track_kwargs["track_block_length"] * self.n_blocks_per_track
         self.env_width = self.track_kwargs["track_width"]
@@ -281,6 +287,7 @@ class BarrierTrack:
             heightfield_noise= None,
             virtual= False,
         ):
+        # 定义jump的depth, height和down_prob
         if isinstance(self.track_kwargs["jump"]["depth"], (tuple, list)):
             if not virtual:
                 jump_depth = min(*self.track_kwargs["jump"]["depth"])
@@ -299,6 +306,7 @@ class BarrierTrack:
             print("Warning: jump_down_prob is dereprecated. Please use another option `down` instead.")
             if np.random.uniform() < self.track_kwargs["jump"]["jump_down_prob"]:
                 jump_height = -jump_height
+
         depth_px = int(jump_depth / self.cfg.horizontal_scale)
         height_value = jump_height / self.cfg.vertical_scale
         wall_thickness_px = int(wall_thickness / self.cfg.horizontal_scale) + 1
@@ -333,6 +341,7 @@ class BarrierTrack:
         assert not (
             self.track_kwargs["jump"].get("fake_offset", 0.) != 0. and self.track_kwargs["jump"].get("fake_height", 0.) != 0.), \
             "fake_offset and fake_height cannot be both non-zero"
+        # fake_offset make obstacle higher than declared height
         jump_height_ = jump_height + (
             self.track_kwargs["jump"].get("fake_offset", 0.) \
             if jump_height > 0. \
@@ -1101,7 +1110,7 @@ class BarrierTrack:
         )
 
     def add_track_to_sim(self, track_origin_px, row_idx= None, col_idx= None):
-        """ add heighfield value and add trimesh to sim for one certain race track """
+        """ add heighfield value and add trimesh to sim for a certain race track """
         # adding trimesh and heighfields
         if "one_obstacle_per_track" in self.track_kwargs.keys():
             print("Warning: one_obstacle_per_track is deprecated, use n_obstacles_per_track instead.")
@@ -1122,6 +1131,7 @@ class BarrierTrack:
             obstacle_order = np.arange(len(self.track_kwargs["options"]))
         difficulties = self.get_difficulty(row_idx, col_idx)
         difficulty, virtual_track = difficulties[:2]
+        # print("row_idx=", row_idx, "difficulty", difficulty)
 
         if self.track_kwargs["add_perlin_noise"]:
             TerrainPerlin_kwargs = self.cfg.TerrainPerlin_kwargs
@@ -1142,6 +1152,7 @@ class BarrierTrack:
                 ySamples= self.track_resolution[1],
                 **TerrainPerlin_kwargs,
             ) / self.cfg.vertical_scale
+        # print("heightfield_noise.shape", heightfield_noise.shape)
 
         block_starting_height_px = track_origin_px[2]
         wall_thickness = np.random.uniform(*self.track_kwargs["wall_thickness"]) if isinstance(self.track_kwargs["wall_thickness"], (tuple, list)) else self.track_kwargs["wall_thickness"]
@@ -1186,7 +1197,9 @@ class BarrierTrack:
             track_origin_px[1]: track_origin_px[1] + self.track_block_resolution[1],
         ] += block_starting_height_px
         block_starting_height_px += height_offset_px
-        
+
+        obstacle_names = [self.track_kwargs["options"][id] for id in obstacle_order]
+        print("row_idx", row_idx, "names", obstacle_names)
         for obstacle_idx, obstacle_selection in enumerate(obstacle_order):
             obstacle_name = self.track_kwargs["options"][obstacle_selection]
             obstacle_id = self.track_options_id_dict[obstacle_name]
@@ -1296,7 +1309,10 @@ class BarrierTrack:
             )
         
         self.add_plane_to_sim(starting_height_px)
-        
+
+        # print("track_resolution", self.track_resolution)
+        # print("self.cfg.horizontal_scale", self.cfg.horizontal_scale)
+
         # env_origins stores the min x, mid y, start z of each track block in meter
         for i in range(self.cfg.num_rows):
             for j in range(self.cfg.num_cols):
@@ -1304,12 +1320,16 @@ class BarrierTrack:
                 self.env_origins[i, j, 1] = self.track_origins_px[i, j, 1] * self.cfg.horizontal_scale
                 self.env_origins[i, j, 2] = self.track_origins_px[i, j, 2] * self.cfg.vertical_scale
                 self.env_origins[i, j, 1] += self.track_kwargs["track_width"] / 2
+
         self.env_origins_pyt = torch.from_numpy(self.env_origins).to(self.device)
         self.heightfield_raw_pyt = torch.tensor(
             self.heightfield_raw,
             dtype= torch.float32,
             device= self.device,
         )
+        # print(self.env_origins.shape)
+        # print(f"env_origins = \n{self.env_origins}")
+        # import pdb;  pdb.set_trace()
 
     def add_plane_to_sim(self, final_height_px= 0.):
         """
@@ -1740,11 +1760,13 @@ class BarrierTrack:
         forward_distance = sample_points[:, 0] - self.cfg.border_size - (track_idx[:, 0] * self.env_length) # (N,) w.r.t a track
         block_idx = torch.floor(forward_distance / self.env_block_length).to(int) # (N,) 
         block_idx[block_idx >= self.track_info_map.shape[2]] = 0.
+        # positions_in_block在块中的位置
         positions_in_block = torch.stack([
             forward_distance % self.env_block_length,
             sample_points[:, 1] - self.env_origins_pyt[track_idx_clipped[:, 0], track_idx_clipped[:, 1]][:, 1],
             sample_points[:, 2] - self.block_starting_height_map[track_idx_clipped[:, 0], track_idx_clipped[:, 1], block_idx],
         ], dim= -1) # (N, 3) related to the origin of the block, not the track.
+        # information of block
         block_infos = self.track_info_map[track_idx_clipped[:, 0], track_idx_clipped[:, 1], block_idx] # (N, 3)
 
         penetration_depths = torch.zeros_like(sample_points[:, 0]) # shape (N,)

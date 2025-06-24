@@ -40,6 +40,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
         # mesh_type = "plane"
         mesh_type = None
         selected = "PlaneTerrain"
+        # selected = "BarrierTrack"
 
         # select height
         # selected = None
@@ -50,8 +51,8 @@ class H1_41RoughCfg(LeggedRobotCfg):
         #
         # }
 
-        block_width = 6.
-        block_length = 6.
+        block_width = 50.
+        block_length = 50.
         # 网格的横纵尺寸
         horizontal_scale = 0.05  # [m]
         vertical_scale = 0.05  # [m]
@@ -59,14 +60,129 @@ class H1_41RoughCfg(LeggedRobotCfg):
         step_height = 0.25
         slope_threshold = 0.75
 
-        # terrain_length = block_length*2
-        # terrain_width = block_width*3
-        num_rows = 2
-        num_cols = 2
+        terrain_width = block_width
+        terrain_length = block_length
+        num_rows = 1
+        num_cols = 1
 
         static_friction = 1.0
         dynamic_friction = 1.0
         restitution = 0.0
+
+        add_noise = True
+        noise_limit = 0.1
+
+        # 这玩意
+        # TerrainPerlin_kwargs = dict(
+        #     zScale= 0.07,
+        #     frequency= 10,
+        # )
+        #
+        # BarrierTrack_kwargs = dict(
+        #     options= [
+        #         # "jump",
+        #         # "leap",
+        #         # "hurdle",
+        #         # "down",
+        #         # "tilted_ramp",
+        #         "stairsup",
+        #         "stairsdown",
+        #         "discrete_rect",
+        #         "slope",
+        #         # "wave",
+        #     ], # each race track will permute all the options
+        #     jump= dict(
+        #         height= [0.05, 0.5],
+        #         depth= [0.1, 0.3],
+        #         # fake_offset= 0.1,
+        #     ),
+        #     leap= dict(
+        #         length= [0.05, 0.8],
+        #         depth= [0.5, 0.8],
+        #         height= 0.2, # expected leap height over the gap
+        #         # fake_offset= 0.1,
+        #     ),
+        #     hurdle= dict(
+        #         height= [0.05, 0.5],
+        #         depth= [0.2, 0.5],
+        #         # fake_offset= 0.1,
+        #         curved_top_rate= 0.1,
+        #     ),
+        #     down= dict(
+        #         height= [0.1, 0.6],
+        #         depth= [0.3, 0.5],
+        #     ),
+        #     tilted_ramp= dict(
+        #         tilt_angle= [0.2, 0.5],
+        #         switch_spacing= 0.,
+        #         spacing_curriculum= False,
+        #         overlap_size= 0.2,
+        #         depth= [-0.1, 0.1],
+        #         length= [0.6, 1.2],
+        #     ),
+        #     slope= dict(
+        #         slope_angle= [0.2, 0.42],
+        #         length= [1.2, 2.2],
+        #         use_mean_height_offset= True,
+        #         face_angle= [-3.14, 0, 1.57, -1.57],
+        #         no_perlin_rate= 0.2,
+        #         length_curriculum= True,
+        #     ),
+        #     slopeup= dict(
+        #         slope_angle= [0.2, 0.42],
+        #         length= [1.2, 2.2],
+        #         use_mean_height_offset= True,
+        #         face_angle= [-0.2, 0.2],
+        #         no_perlin_rate= 0.2,
+        #         length_curriculum= True,
+        #     ),
+        #     slopedown= dict(
+        #         slope_angle= [0.2, 0.42],
+        #         length= [1.2, 2.2],
+        #         use_mean_height_offset= True,
+        #         face_angle= [-0.2, 0.2],
+        #         no_perlin_rate= 0.2,
+        #         length_curriculum= True,
+        #     ),
+        #     stairsup= dict(
+        #         height= [0.1, 0.3],
+        #         length= [0.3, 0.5],
+        #         residual_distance= 0.05,
+        #         num_steps= [3, 19],
+        #         num_steps_curriculum= True,
+        #     ),
+        #     stairsdown= dict(
+        #         height= [0.1, 0.3],
+        #         length= [0.3, 0.5],
+        #         num_steps= [3, 19],
+        #         num_steps_curriculum= True,
+        #     ),
+        #     discrete_rect= dict(
+        #         max_height= [0.05, 0.2],
+        #         max_size= 0.6,
+        #         min_size= 0.2,
+        #         num_rects= 10,
+        #     ),
+        #     wave= dict(
+        #         amplitude= [0.1, 0.15], # in meter
+        #         frequency= [0.6, 1.0], # in 1/meter
+        #     ),
+        #     track_width= 3.2,
+        #     track_block_length= 2.4,
+        #     wall_thickness= (0.01, 0.6),
+        #     wall_height= [-0.5, 2.0],
+        #     add_perlin_noise= True,
+        #     border_perlin_noise= True,
+        #     border_height= 0.,
+        #     virtual_terrain= False,
+        #     draw_virtual_terrain= True,
+        #     engaging_next_threshold= 0.8,
+        #     engaging_finish_threshold= 0.,
+        #     curriculum_perlin= False,
+        #     no_perlin_threshold= 0.1,
+        #     randomize_obstacle_order= True,
+        #     n_obstacles_per_track= 1,
+        # )
 
     class env(LeggedRobotCfg.env):
         # 3 + 3 + 3 + 12 + 12 + 12 + 2 = 47
@@ -325,24 +441,24 @@ class H1_41RoughCfg(LeggedRobotCfg):
             # contact_no_vel = -0.2
             # feet_swing_height = -20.0
             # contact = 0.18
-
             tracking_lin_vel = 1.0
             tracking_ang_vel = 0.5
-            lin_vel_z = -2.0
+            lin_vel_z = -0.2
             ang_vel_xy = -0.05
             orientation = -1.0
             base_height = -10.0
-            dof_acc = -2.5e-7
+            dof_acc = -2.5e-8
             dof_vel = -1e-5
             feet_air_time = 0.0
             collision = 0.0
-            action_rate = -0.01
+            action_rate = -1e-3
             dof_pos_limits = -5.0
             alive = 1.5
             hip_pos = -1.0
             contact_no_vel = -0.2
             feet_swing_height = -20.0
-            contact = 1.8
+            contact = 0.18
+            torques = 1e-6
             # hand_sup = -100.0
 
 # RunnerCfg

@@ -80,6 +80,7 @@ class TaskRegistry():
             Dict: the corresponding config file
         """
         # if no args passed get command line arguments
+        print(self.get_cfgs("go2_field")[0].terrain.num_rows)
         if args is None:
             args = get_args()
         # check if there is a registered env with that name
@@ -90,6 +91,7 @@ class TaskRegistry():
         if env_cfg is None:
             # load config files
             env_cfg, _ = self.get_cfgs(name)
+
         # override cfg from args (if specified)
         env_cfg, _ = update_cfg_from_args(env_cfg, None, args)
         set_seed(env_cfg.seed)

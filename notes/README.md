@@ -3,17 +3,12 @@
 1. 创建OnPolicyRunner()，
 
 ## LeggedRobot
-
 * init_buffer: 用环境的状态信息，初始化所有buffer
-
 * _prepare_reward_function：准备一系列奖励函数
-
 * create_gournd_plane：设置地形
-
 * create_envs：创建环境，设置asset，create_actor
-
 * get_env_origins：utilization of torch.meshgrid
-
+* select obs configurations
 ```python
         num_cols = np.floor(np.sqrt(self.num_envs))
         num_rows = np.ceil(self.num_envs / num_cols)
@@ -70,50 +65,4 @@ self.contact_forces = gymtorch.wrap_tensor(net_contact_forces).view(self.num_env
         self.sensor_handles = []
         sensor_handle_dict = self._create_sensors(env_handle, actor_handle)
         self.sensor_handles.append(sensor_handle_dict)
-
-    def _create_sensors(self, env_handle= None, actor_handle= None): 
-        if "forward_depth" in all_obs_components or "forward_color" in all_obs_components:
-            camera_handle = self._create_onboard_camera(env_handle, actor_handle, "forward_camera")
-            sensor_handle_dict["forward_camera"] = camera_handle
-
-    def _create_onboard_camera(self, env_handle, actor_handle, sensor_name):
-        camera_props = gymapi.CameraProperties()
-        camera_props.enable_tensors = True
-        camera_props.height = getattr(self.cfg.sensor, sensor_name).resolution[0]
-        camera_props.width = getattr(self.cfg.sensor, sensor_name).resolution[1]
-        ...
-        camera_handle = self.gym.create_camera_sensor(env_handle, camera_props)
-        ...
-        self.gym.attach_camera_to_body(
-            camera_handle,
-            env_handle,
-            actor_handle,
-            local_transform,
-            gymapi.FOLLOW_TRANSFORM,
-        )
-```
-* get image tensor(binded)
-```python
-    def _init_sensor_buffers(self, env_i, env_handle):
-        if "forward_depth" in self.all_obs_components:
-            self.sensor_tensor_dict["forward_depth"].append(gymtorch.wrap_tensor(
-                self.gym.get_camera_image_gpu_tensor(
-                    self.sim,
-                    env_handle,
-                    self.sensor_handles[env_i]["forward_camera"],
-                    gymapi.IMAGE_DEPTH,
-            )))
-```
-* digest gpu tensor in simulation(in post_physics_step/)
-```python
-    def compute_observations(self):
-        self.gym.fetch_results(self.sim, True)
-        self.gym.step_graphics(self.sim)
-        self.gym.render_all_camera_sensors(self.sim)
-        self.gym.start_access_image_tensors(self.sim)
-```
-* concatenate into obs
-```python
-    def _get_forward_depth_obs(self, privileged= False):
-        return torch.stack(self.sensor_tensor_dict["forward_depth"]).flatten(start_dim= 1)
 ```

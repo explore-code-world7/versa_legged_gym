@@ -23,7 +23,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
         num_privileged_obs = None # No use, use privileged_obs_components
 
         use_lin_vel = False # to be decided
-        num_actions = 12
+        num_actions = 1
         send_timeouts = True # send time out information to the algorithm
         episode_length_s = 20 # episode length in seconds
 
@@ -194,7 +194,7 @@ class Go2RoughCfg( LeggedRobotCfg ):
         add_noise = False
 
     class viewer( LeggedRobotCfg.viewer ):
-        pos = [-1., -1., 0.4]
+        pos = [1., 1., 1.4]
         lookat = [0., 0., 0.3]
 
     class sim( LeggedRobotCfg.sim ):

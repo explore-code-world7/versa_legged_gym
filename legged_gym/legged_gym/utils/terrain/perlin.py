@@ -138,8 +138,10 @@ class TerrainPerlin:
         """ Get the terrain heights below the given points """
         points_shape = points.shape
         points = points.view(-1, 3)
+        # 都是要取整
         points_x_px = (points[:, 0] / self.cfg.horizontal_scale).to(int)
         points_y_px = (points[:, 1] / self.cfg.horizontal_scale).to(int)
+        # torch.logical_or
         out_of_range_mask = torch.logical_or(
             torch.logical_or(points_x_px < 0, points_x_px >= self.heightfield_raw_pyt.shape[0]),
             torch.logical_or(points_y_px < 0, points_y_px >= self.heightfield_raw_pyt.shape[1]),

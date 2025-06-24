@@ -762,6 +762,7 @@ class LeggedRobot(BaseTask):
         self.gym.set_dof_state_tensor_indexed(self.sim,
                                               gymtorch.unwrap_tensor(self.all_dof_states),
                                               gymtorch.unwrap_tensor(dof_idx_int32), len(dof_idx_int32))
+
     def _reset_root_states(self, env_ids):
         """ Resets ROOT states position and velocities of selected environmments
             Sets base position based on the curriculum
@@ -780,7 +781,7 @@ class LeggedRobot(BaseTask):
                 self.root_states[env_ids, :2] += torch_rand_float(-1., 1., (len(env_ids), 2), device=self.device) # xy position within 1m of the center
         else:
             self.root_states[env_ids] = self.base_init_state
-            self.root_states[env_ids, :3] += self.env_origins[env_ids]
+
         # base rotation (roll and pitch)
         if hasattr(self.cfg.domain_rand, "init_base_rot_range"):
             base_roll = torch_rand_float(
@@ -872,6 +873,8 @@ class LeggedRobot(BaseTask):
         move_up, move_down = self._get_terrain_curriculum_move(env_ids)
         self.terrain_levels[env_ids] += 1 * move_up - 1 * move_down
         # Robots that solve the last level are sent to a random one
+        # terrain_levels大于max_terrain_level时，随机选择torch.randint_like
+        # 否则取 torch.clip(self.terrain_levels[env_ids], 0)
         self.terrain_levels[env_ids] = torch.where(self.terrain_levels[env_ids]>=self.max_terrain_level,
                                                    torch.randint_like(self.terrain_levels[env_ids], self.max_terrain_level),
                                                    torch.clip(self.terrain_levels[env_ids], 0)) # (the minumum level is zero)
@@ -1090,6 +1093,7 @@ class LeggedRobot(BaseTask):
             self._init_sensor_buffers(env_i, env_handle)
 
     def _init_body_volume_points(self):
+        # body_volume_points represents point's coordinate under robot's coordination
         """ Generate a series of points grid so that they can be bind to those rigid bodies
         By 'those rigid bodies', we mean the rigid bodies that are specified in the `body_measure_points`
         """
@@ -1098,6 +1102,7 @@ class LeggedRobot(BaseTask):
         self.body_sample_indices = [] # index in environment domain
         # NOTE: assuming all envs have the same number of actors and rigid bodies
         rigid_body_names = self.gym.get_actor_rigid_body_names(self.envs[0], self.actor_handles[0])
+        # 寻找cfg.py中sim.body_measure_points和actor_rigid_body_index对应的点, 分别加入body_sample_indices和self.body_measure_name_order;
         for name, measure_name in itertools.product(rigid_body_names, self.cfg.sim.body_measure_points.keys()):
             if measure_name in name:
                 self.body_sample_indices.append(
@@ -1110,7 +1115,7 @@ class LeggedRobot(BaseTask):
                 self.body_measure_name_order.append(measure_name) # order specified
         self.body_sample_indices = torch.tensor(self.body_sample_indices, device= self.sim_device).flatten() # n_bodies (each env)
 
-        # compute and store each sample points in body frame.
+        # compute and store each sample points in body frame based on sim.body_measure_points dictionary
         self.body_volume_points = dict()
         for measure_name, points_cfg in self.cfg.sim.body_measure_points.items():
             x = torch.tensor(points_cfg["x"], device= self.device, dtype= torch.float32, requires_grad= False)
@@ -1175,6 +1180,7 @@ class LeggedRobot(BaseTask):
             # use `volume_sample_points_refreshed` to avoid repeated computation
             return
         sample_points_start_idx = 0
+        # search out measured volume points at assigned positions
         for body_idx, body_measure_name in enumerate(self.body_measure_name_order):
             volume_points = self.body_volume_points[body_measure_name] # (n_points, 3)
             num_volume_points = volume_points.shape[0]
@@ -1408,6 +1414,7 @@ class LeggedRobot(BaseTask):
         start_pose.p = gymapi.Vec3(*self.base_init_state[:3])
 
         self._get_env_origins()
+        # print(f"self.env_origins= {self.env_origins}")
         env_lower = gymapi.Vec3(0., 0., 0.)
         env_upper = gymapi.Vec3(0., 0., 0.)
         self.npc_handles = [] # surrounding actors or objects or oppoents in each environment.
@@ -1467,11 +1474,18 @@ class LeggedRobot(BaseTask):
             # put robots at the origins defined by the terrain
             max_init_level = min(self.cfg.terrain.max_init_terrain_level, self.terrain.cfg.num_rows - 1)
             if not self.cfg.terrain.curriculum: max_init_level = self.cfg.terrain.num_rows - 1
+            # row denotes obstacle in a track;
+            # column denotes number of envs;
             self.terrain_levels = torch.randint(0, max_init_level+1, (self.num_envs,), device=self.device)
+            # 这个div保证terrain_types为[0,1,...,num_cols-1]
             self.terrain_types = torch.div(torch.arange(self.num_envs, device=self.device), (self.num_envs/self.cfg.terrain.num_cols), rounding_mode='floor').to(torch.long)
             self.max_terrain_level = self.cfg.terrain.num_rows
             self.terrain_origins = torch.from_numpy(self.terrain.env_origins).to(self.device).to(torch.float)
             self.env_origins[:] = self.terrain_origins[self.terrain_levels, self.terrain_types]
+            # num_envs个环境，每个环境的列数一次为[0,1,...,num_cols-1,0,1,..,num_cols-1,...]
+            # 每个环境的行数依次为randn(*0,self.cfg.terrain.max_init_terrain_level)
+            # print("terrain_origins2", self.terrain_origins.shape)
+            # print("max_terrain_level",self.max_terrain_level)
         else:
             self.custom_origins = False
             self.env_origins = torch.zeros(self.num_envs, 3, device=self.device, requires_grad=False)
@@ -1483,6 +1497,10 @@ class LeggedRobot(BaseTask):
             self.env_origins[:, 0] = spacing * xx.flatten()[:self.num_envs]
             self.env_origins[:, 1] = spacing * yy.flatten()[:self.num_envs]
             self.env_origins[:, 2] = 0.
+            # print("*" * 50)
+            # print(getattr(self.cfg.terrain, "selected", None))
+            # print(num_cols, num_rows)
+            # import pdb; pdb.set_trace()
 
     def _parse_cfg(self, cfg):
         self.dt = self.cfg.control.decimation * self.sim_params.dt
