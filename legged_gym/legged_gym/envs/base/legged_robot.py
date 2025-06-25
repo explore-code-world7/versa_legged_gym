@@ -1598,7 +1598,6 @@ class LeggedRobot(BaseTask):
         if getattr(self.cfg.viewer, "draw_height_measurements", False):
             self._draw_height_measurements_vis()
         if getattr(self.cfg.viewer, "draw_sensors", False):
-            print("draw sensors")
             for env_h, sensor_hd in zip(self.envs, self.sensor_handles):
                 self._draw_sensor_vis(env_h, sensor_hd)
         if getattr(self.cfg.viewer, "draw_sensor_readings", False):
@@ -1648,7 +1647,9 @@ class LeggedRobot(BaseTask):
         else:
             points = quat_apply_yaw(self.base_quat.repeat(1, self.num_height_points), self.height_points) + (self.root_states[:, :3]).unsqueeze(1)
 
-        return self.terrain.get_terrain_heights(points)
+        _hf = self.terrain.get_terrain_heights(points)
+        # print("heightfield", _hf.shape)
+        return _hf
 
     def _get_robot_dof_indices(self, target_dof_name):
         """ A helper function for later acquiring joint-specific data from the simulation. """

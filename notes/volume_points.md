@@ -3,6 +3,8 @@
 
 # legged_robot/field
 * refresh_volume_sample_points
+* 由cfg.sim.body_measure_points决定
+
 ```python
     def refresh_volume_sample_points(self):
         if self.volume_sample_points_refreshed:
@@ -32,6 +34,7 @@
 ```
 
 * 作用：维护volume_sample_points_vel和volume__sample_points
+
 ## data stureture illustration
 * self.body_volume_points: coodinate of mearsure points under robot coordination
 * self.body_sample_indices: indices in sim.actor.rigid_body of all measure ponits in cfg.py
@@ -81,6 +84,7 @@
 * well_height, wall_thickness: 墙的高度和厚度;
 
 ## ds
+* x-axis = difficulty, y-axis = terrrain type
 * self.track_resolution: 分辨率 of track
 * self.track_info_map: [num_rows, num_cols, n_block_per_track, 1+self.block_info_dim],
   * param category: track_id, obstacle_depth, obstacle_critical_params
@@ -89,7 +93,10 @@
 > each track denotes serveral block, there is a obstacle at each block, a track consist of a connected track_blocks
 > so a track in infact denotes an env
 * self.env_block_length, self.env_length, self.env_width:
-* self.engating_next_min_forward_distance: 进入到下一个obstacle的最小前进距离；不同block，同一track是倍墙分割出来的
+* self.engating_next_min_forward_distance: 判定进入下一个block、在当前block的最小前进距离；不同block，同一track是倍墙分割出来的
+* self.env_origins_pyt 是 pytorch版本的env_origins
+
+
 * 每个track_block的示意图
 ```python
         """ All track blocks are defined as follows
@@ -229,8 +236,18 @@ self.initialize_track_info_buffer()
 * get_terrain_heights:
 * available_terrain_type_names 
 * get_terrain_type_names
-
 8. draw_xxx: 可视化函数
+9. get_track_idx: 获取position所在的track的row_idx, col_idx
+10. get_goal_position: 
+* goal_x = 
+```python
+        goal_position_x[~last_track_last_block_mask] += (self.engaging_next_min_forward_distance + self.env_block_length) / 2
+        goal_position_x[last_track_last_block_mask] += self.env_block_length
+```
+* goal_z = robot_positions[:, 2]
+* 本来，要加上地形的高度
+* 但由于指令都是x,y,yaw的命令，故不用
+* 变成x,y,z,yaw的指令，理论上可以提高效果by provide prior
 
 
 ## function

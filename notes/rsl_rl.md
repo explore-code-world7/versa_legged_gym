@@ -15,18 +15,37 @@
   1. generate batch-like dataset from self.storage.xxx_buffer;
   2. use batch data to update network;
 
+## EstimatorAlgMixin
+* 什么是estimator_obs_components: obs中estimator net的输入
+* 什么是estimator_target_components: estimator net的目标预测结果
+* compute_losses: 添加loss of estimator of lin_vel 
+* 由于是从critic_obs中采样，act时更改actor_obs的target，不影响compute_loss;
 
 # env
 * vec_env: 定义虚拟环境的接口
 
-
 # modules
-## actor_cirtic
+## ActorCritic
 * __init__(): 定义各种超参
 * xxx
 
-## actor_critic_recurrent
+## ActorCriticRecurrent
 * rnn接受[num_transitions_per_env, trajectory_length, observation_dim]
+
+## EncoderActorCriticMixin
+1. 构建若干个encoder，
+2. 用来分别encoder某个obs，
+3. 结果作为新的obs，传给act, act_inference, evaluate函数
+### 参数的具体含义
+
+
+
+## EstimatorMixin
+* build_estimator: estimator从self.estimator_obs_components估计self.estimator_target_components，
+用来替代observation中的target_obs部分(目标状态)
+* 对rnn.hidden_states.actor/critic也要用estimator_rnn来更新
+
+
 
 # networks
 * components of policy&critic network

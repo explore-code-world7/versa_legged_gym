@@ -1069,6 +1069,9 @@ class BarrierTrack:
         self.tot_cols = map_y_size
         print("heightfield_raw data shape:", map_x_size, map_y_size, "border size:", self.border)
         self.heightfield_raw = np.zeros((map_x_size, map_y_size), dtype= np.float32)
+
+        # print(self.heightfield_raw.shape)
+        # import pdb; pdb.set_trace()
         if self.track_kwargs["add_perlin_noise"] and self.track_kwargs["border_perlin_noise"]:
             TerrainPerlin_kwargs = self.cfg.TerrainPerlin_kwargs
             for k, v in self.cfg.TerrainPerlin_kwargs.items():
@@ -1199,7 +1202,7 @@ class BarrierTrack:
         block_starting_height_px += height_offset_px
 
         obstacle_names = [self.track_kwargs["options"][id] for id in obstacle_order]
-        print("row_idx", row_idx, "names", obstacle_names)
+        # print("row_idx", row_idx, "names", obstacle_names)
         for obstacle_idx, obstacle_selection in enumerate(obstacle_order):
             obstacle_name = self.track_kwargs["options"][obstacle_selection]
             obstacle_id = self.track_options_id_dict[obstacle_name]
@@ -1454,6 +1457,7 @@ class BarrierTrack:
         in_track_mask = self.in_terrain_range(base_positions)
         track_idx_clipped = self.get_track_idx(base_positions)
         forward_distance, block_idx_clipped = self.get_in_track_positions(base_positions)
+            # forward_distance找到track_row_idx, track_col_idx, block_idx
         in_block_distance = forward_distance % self.env_block_length
         # compute whether the robot is engaging with the next block
         curr_obstacle_depth = self.track_info_map[
@@ -1471,15 +1475,15 @@ class BarrierTrack:
         track_idx_selection = track_idx_clipped.detach().clone()
         block_idx_selection = block_idx_clipped.detach().clone()
         last_track_last_block_mask = (block_idx_clipped == (self.n_blocks_per_track - 1)) & (track_idx_clipped[:, 0] == (self.cfg.num_rows - 1))
-        track_idx_selection[engaging_next_track & (~last_track_last_block_mask), 0] += 1
+        track_idx_selection[engaging_next_track & (~last_track_last_block_mask), 0] += 1    # track只会在x轴(代表difficulty)移动
         assert track_idx_selection[:, 0].max() < self.track_info_map.shape[0], track_idx_selection[:, 0].max()
         block_idx_selection[engaging_next_block & (~last_track_last_block_mask)] += 1
-        block_idx_selection[engaging_next_track & (~last_track_last_block_mask) | (~in_track_mask)] = 0
+        block_idx_selection[engaging_next_track & (~last_track_last_block_mask) | (~in_track_mask)] = 0     # process traverse range
         assert block_idx_selection.max() <= (self.n_blocks_per_track - 1), block_idx_selection.max()
         
         return (
             engaging_next_block, 
-            track_idx_selection, 
+            track_idx_selection,
             block_idx_selection,
         )
     

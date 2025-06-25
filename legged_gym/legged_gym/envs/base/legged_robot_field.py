@@ -268,6 +268,8 @@ class LeggedRobotFieldMixin:
         """ compute a locomotion command based on current goal for the robot. """
         if self.check_BarrierTrack_terrain():
             self.current_goal_global = self.terrain.get_goal_position(self.root_states[:, :3])
+            # print("root_states", self.root_states[0][0:3])
+            # print("current_goal_global", self.current_goal_global[0])
             current_goal_local = tf_apply(
                 *tf_inverse(self.base_quat, self.root_states[:, :3]),
                 self.current_goal_global,

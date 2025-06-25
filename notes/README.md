@@ -1,6 +1,7 @@
-# initial step
 
+# initial step
 1. 创建OnPolicyRunner()，
+* camera用sim.no_camera确定
 
 ## LeggedRobot
 * init_buffer: 用环境的状态信息，初始化所有buffer
