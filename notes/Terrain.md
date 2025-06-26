@@ -1,8 +1,41 @@
 * BarrierTrack provides a policy for diverse terrains traverse.
 * isgym默认不同env不会碰撞
-* what's n_blocks_per_track?
 
-![img.png](assets/env_origin.png)
+# assign goal
+* _update_command_by_terrain_goal belongs to legged_robot_fieldMixin;
+* 直接h1_41_env继承FieldConfig会发生什么? Or, what does LRFieldMixin requires?
+    1. requires BarrierTrack_terrain for training;
+* What does it brings?
+
+
+# track_size
+```python
+self.track_resolution = (
+    np.ceil(self.track_kwargs["track_block_length"] * self.n_blocks_per_track / self.cfg.horizontal_scale).astype(int),
+    np.ceil(self.track_kwargs["track_width"] / self.cfg.horizontal_scale).astype(int),
+) # f
+self.env_length = self.track_kwargs["track_block_length"] * self.n_blocks_per_track
+```
+* env_length 对应track_solution
+* a track can be composed of multiple obstacle;
+```
+heightfield_noise = TerrainPerlin.generate_fractal_noise_2d(
+    xSize= self.env_length,
+    ySize= self.env_width,
+    xSamples= self.track_resolution[0],
+    ySamples= self.track_resolution[1],
+    **TerrainPerlin_kwargs,
+) / self.cfg.vertical_scale
+```
+
+# multiple block per track
+* n_blocks_per_track=1
+
+![img.png](assets/n_blocks_per_track_1.png)
+
+* n_blocks_per_track=3 && randomize_obstacle_order=True
+
+![img.png](assets/3_blocks_track.png)
 
 # curriculum learning
 * n_blocks_per_track in a env

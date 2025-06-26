@@ -16,9 +16,9 @@ python  legged_gym/legged_gym/scripts/train.py  --task=h1_41  --headless  --max_
 python  legged_gym/legged_gym/scripts/train.py  --task=h1_41  --headless --load_run="Jun17_17-20-54_lstm_256"  --checkpoint=-1  --resume  --sim_dev cuda:2  --rl_device cuda:3  --max_iterations=1000
 
 # play
-python  legged_gym/legged_gym/scripts/play.py  --task=h1_41  --load_run="Jun25_22-04-53_hidden_256_hf_encoder" --checkpoint=1575 --num_envs=4
+python  legged_gym/legged_gym/scripts/play.py  --task=h1_41_hf  --load_run="Jun26_16-49-35_hidden_256_plane_height_field" --checkpoint=-1 --num_envs=4
 
-python  legged_gym/legged_gym/scripts/play.py  --task=h1_41  --load_run="Jun15_22-21-22_no_lstm" --checkpoint=1575 --num_envs=4
+python  legged_gym/legged_gym/scripts/play.py  --task=h1_41  --load_run="Jun26_17-04-29_hidden_256_plane_hf_measure" --checkpoint=-1 --num_envs=4
 
 # terrain_test
 python  legged_gym/legged_gym/scripts/play.py  --task=h1_2  --load_run="Jun11_18-27-32_" --checkpoint=-1 --num_envs=4

@@ -1117,6 +1117,10 @@ class BarrierTrack:
         # adding trimesh and heighfields
         if "one_obstacle_per_track" in self.track_kwargs.keys():
             print("Warning: one_obstacle_per_track is deprecated, use n_obstacles_per_track instead.")
+
+        # n_obstacles_per_track==1 直接选 col_idx% len(self.track_kwargs["options"]) 的地形;
+        # n_obstacles_per_track>1 从track_kwargs["options"]选 n_obstacles_per_track个;
+        # 或者全部并排
         if self.track_kwargs.get("n_obstacles_per_track", None) == 1 and len(self.track_kwargs["options"]) > 0:
             obstacle_order = np.array([col_idx % len(self.track_kwargs["options"])])
             # NOTE: record the terrain type name for each column for later use and preventing
@@ -1132,6 +1136,9 @@ class BarrierTrack:
             )
         else:
             obstacle_order = np.arange(len(self.track_kwargs["options"]))
+        # print(obstacle_order)
+        # import pdb; pdb.set_trace()
+
         difficulties = self.get_difficulty(row_idx, col_idx)
         difficulty, virtual_track = difficulties[:2]
         # print("row_idx=", row_idx, "difficulty", difficulty)

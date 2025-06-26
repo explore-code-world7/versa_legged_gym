@@ -152,6 +152,8 @@ class LeggedRobotFieldMixin:
         if getattr(self.cfg.commands, "is_goal_based", False):
             self._update_command_by_terrain_goal()
 
+        # import pdb; pdb.set_trace()
+
         return return_
     
     def _resample_commands(self, env_ids):

@@ -85,33 +85,33 @@ def play(args):
             update_class_from_dict(env_cfg, d, strict= True)
             update_class_from_dict(train_cfg, d, strict= True)
 
-    # override some parameters for testing
-    if env_cfg.terrain.selected == "BarrierTrack":
-        env_cfg.env.num_envs = min(env_cfg.env.num_envs, 1)
-        env_cfg.env.episode_length_s = 20
-        env_cfg.terrain.max_init_terrain_level = 0
-        env_cfg.terrain.num_rows = 4
-        env_cfg.terrain.num_cols = 8
-        env_cfg.terrain.BarrierTrack_kwargs["options"] = [
-            "jump",
-            "leap",
-            "down",
-            "hurdle",
-            "tilted_ramp",
-            "stairsup",
-            "discrete_rect",
-            "wave",
-        ]
-        env_cfg.terrain.BarrierTrack_kwargs["leap"]["fake_offset"] = 0.1
-        env_cfg.terrain.BarrierTrack_kwargs["draw_virtual_terrain"] = True
-    else:
-        env_cfg.env.num_envs = min(env_cfg.env.num_envs, 1)
-        env_cfg.env.episode_length_s = 60
-        env_cfg.terrain.terrain_length = 8
-        env_cfg.terrain.terrain_width = 8
-        env_cfg.terrain.max_init_terrain_level = 0
-        env_cfg.terrain.num_rows = 1
-        env_cfg.terrain.num_cols = 1
+    # # override some parameters for testing
+    # if env_cfg.terrain.selected == "BarrierTrack":
+    #     env_cfg.env.num_envs = min(env_cfg.env.num_envs, 1)
+    #     env_cfg.env.episode_length_s = 20
+    #     env_cfg.terrain.max_init_terrain_level = 0
+    #     env_cfg.terrain.num_rows = 4
+    #     env_cfg.terrain.num_cols = 8
+    #     env_cfg.terrain.BarrierTrack_kwargs["options"] = [
+    #         "jump",
+    #         "leap",
+    #         "down",
+    #         "hurdle",
+    #         "tilted_ramp",
+    #         "stairsup",
+    #         "discrete_rect",
+    #         "wave",
+    #     ]
+    #     env_cfg.terrain.BarrierTrack_kwargs["leap"]["fake_offset"] = 0.1
+    #     env_cfg.terrain.BarrierTrack_kwargs["draw_virtual_terrain"] = True
+    # else:
+    #     env_cfg.env.num_envs = min(env_cfg.env.num_envs, 1)
+    #     env_cfg.env.episode_length_s = 60
+    #     env_cfg.terrain.terrain_length = 8
+    #     env_cfg.terrain.terrain_width = 8
+    #     env_cfg.terrain.max_init_terrain_level = 0
+    #     env_cfg.terrain.num_rows = 1
+    #     env_cfg.terrain.num_cols = 1
     # env_cfg.terrain.curriculum = False
     # env_cfg.asset.fix_base_link = True
     env_cfg.env.episode_length_s = 1000
@@ -126,10 +126,10 @@ def play(args):
     env_cfg.termination.timeout_at_border = False
     env_cfg.termination.timeout_at_finished = False
     env_cfg.viewer.debug_viz = True
-    env_cfg.viewer.draw_measure_heights = False
+    env_cfg.viewer.draw_measure_heights = True
     env_cfg.viewer.draw_height_measurements = False
-    env_cfg.viewer.draw_volume_sample_points = False
-    env_cfg.viewer.draw_sensors = False
+    env_cfg.viewer.draw_volume_sample_points = True
+    env_cfg.viewer.draw_sensors = True
     if hasattr(env_cfg.terrain, "BarrierTrack_kwargs"):
         env_cfg.terrain.BarrierTrack_kwargs["draw_virtual_terrain"] = True
     train_cfg.runner.resume = (args.load_run is not None)
@@ -238,9 +238,11 @@ def play(args):
         if "obs_slice" in locals().keys():
             obs_component = obs[:, obs_slice[0]].reshape(-1, *obs_slice[1])
             print(obs_component[robot_index])
+        # 获取动作，执行，推理
         actions = policy(obs.detach())
         teacher_actions = actions
         obs, critic_obs, rews, dones, infos = env.step(actions.detach())
+
         if RECORD_FRAMES:
             filename = os.path.join(
                 os.path.abspath("logs/images/"),
@@ -482,7 +484,7 @@ def play(args):
                 print("env dones because of timeout")
             else:
                 print("env dones because of failure")
-            # print(infos)
+            # print(infos)W
         if i % 100 == 0:
             print("frame_rate:" , 100/(time.time_ns() - start_time) * 1e9, 
                   "command_x:", env.commands[robot_index, 0],

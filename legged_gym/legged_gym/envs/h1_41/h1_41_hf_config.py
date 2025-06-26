@@ -68,7 +68,7 @@ class H1_41_HF_RoughCfg(LeggedRobotCfg):
         selected = "PlaneTerrain"
         # selected = "BarrierTrack"
 
-        curriculum = True
+        curriculum = False
         measure_heights = True
 
         block_width = 40
@@ -82,7 +82,7 @@ class H1_41_HF_RoughCfg(LeggedRobotCfg):
 
         terrain_width = block_width
         terrain_length = block_length
-        num_rows = 5
+        num_rows = 4
         num_cols = 2
 
         static_friction = 1.0
@@ -113,59 +113,6 @@ class H1_41_HF_RoughCfg(LeggedRobotCfg):
                 # "slope",
                 # "wave",
             ], # each race track will permute all the options
-            jump= dict(
-                height= [0.05, 0.5],
-                depth= [0.1, 0.3],
-                # fake_offset= 0.1,
-            ),
-            leap= dict(
-                length= [0.05, 0.8],
-                depth= [0.5, 0.8],
-                height= 0.2, # expected leap height over the gap
-                # fake_offset= 0.1,
-            ),
-            hurdle= dict(
-                height= [0.05, 0.5],
-                depth= [0.2, 0.5],
-                # fake_offset= 0.1,
-                curved_top_rate= 0.1,
-            ),
-            down= dict(
-                height= [0.1, 0.6],
-                depth= [0.3, 0.5],
-            ),
-            tilted_ramp= dict(
-                tilt_angle= [0.2, 0.5],
-                switch_spacing= 0.,
-                spacing_curriculum= False,
-                overlap_size= 0.2,
-                depth= [-0.1, 0.1],
-                length= [0.6, 1.2],
-            ),
-            slope= dict(
-                slope_angle= [0.2, 0.42],
-                length= [1.2, 2.2],
-                use_mean_height_offset= True,
-                face_angle= [-3.14, 0, 1.57, -1.57],
-                no_perlin_rate= 0.2,
-                length_curriculum= True,
-            ),
-            slopeup= dict(
-                slope_angle= [0.2, 0.42],
-                length= [1.2, 2.2],
-                use_mean_height_offset= True,
-                face_angle= [-0.2, 0.2],
-                no_perlin_rate= 0.2,
-                length_curriculum= True,
-            ),
-            slopedown= dict(
-                slope_angle= [0.2, 0.42],
-                length= [1.2, 2.2],
-                use_mean_height_offset= True,
-                face_angle= [-0.2, 0.2],
-                no_perlin_rate= 0.2,
-                length_curriculum= True,
-            ),
             stairsup= dict(
                 height= [0.1, 0.3],
                 length= [0.3, 0.5],
@@ -178,16 +125,6 @@ class H1_41_HF_RoughCfg(LeggedRobotCfg):
                 length= [0.3, 0.5],
                 num_steps= [3, 19],
                 num_steps_curriculum= True,
-            ),
-            discrete_rect= dict(
-                max_height= [0.05, 0.2],
-                max_size= 0.6,
-                min_size= 0.2,
-                num_rects= 10,
-            ),
-            wave= dict(
-                amplitude= [0.1, 0.15], # in meter
-                frequency= [0.6, 1.0], # in 1/meter
             ),
             track_width= 3.2,
             track_block_length= 2.4,
@@ -203,7 +140,7 @@ class H1_41_HF_RoughCfg(LeggedRobotCfg):
             curriculum_perlin= False,
             no_perlin_threshold= 0.1,
             randomize_obstacle_order= True,
-            n_obstacles_per_track= 1,
+            n_obstacles_per_track= 3,
         )
 
     class env(LeggedRobotCfg.env):
@@ -259,7 +196,7 @@ class H1_41_HF_RoughCfg(LeggedRobotCfg):
             depth_range = [0.0, 3.0]
 
             latency_range = [0.08, 0.142]
-            latency_resampling_time = 5.0
+            latency_resampling_time = 5.
             refresh_duration = 1/10 # [s]
 
         class proprioception:
@@ -268,10 +205,11 @@ class H1_41_HF_RoughCfg(LeggedRobotCfg):
             latency_resampling_time = 5.0 # [s]
 
     class viewer(LeggedRobotCfg.viewer):
-        # debug_viz = True
-        # draw_measure_heights = True
-        # draw_sensors = True
-        # draw_volume_sample_points = True
+        debug_viz = True
+        draw_measure_heights = True
+        # draw_height_measurements = True
+        draw_sensors = True
+        draw_volume_sample_points = True
         pos = [-1., 4., 1.0]
         lookat = [0., 4., 0.3]
 

@@ -3,7 +3,17 @@ import numpy as np
 
 # 也许可以把torso固定了
 # EnvCfg
-class H1_41RoughCfg(LeggedRobotCfg):
+class H1_41_StairCfg(LeggedRobotCfg):
+
+    # class normalization(LeggedRobotCfg.normalization):
+    #     # class obs_scales(LeggedRobotCfg.normalization.obs_scales):
+    #     #     # lin_vel = 2.0
+    #     #     # ang_vel = 0.25
+    #     #     # commands = [2., 2., 0.25] # matching lin_vel and ang_vel scales
+    #     #     # dof_pos = 1.0
+    #     #     # dof_vel = 0.05
+    #     #     # height_measurements = 0.5
+    #         forward_depth = 0.01
 
     class commands(LeggedRobotCfg.commands):
         # resampling_time = 5 # [s]
@@ -58,26 +68,28 @@ class H1_41RoughCfg(LeggedRobotCfg):
 
         # select height
         # selected = None
-        curriculum = False
+        curriculum = True
         measure_heights = True
 
         # terrain_kwargs = {
         #
         # }
 
-        block_width = 8
-        block_length = 8
+        # # for pure_stair
+        # block_width = 8
+        # block_length = 8
+        # step_width = 0.5
+        # step_height = 0.25
+        # slope_threshold = 0.75
+        #
+        # terrain_width = block_width
+        # terrain_length = block_length
+
         # 网格的横纵尺寸
         horizontal_scale = 0.05  # [m]
         vertical_scale = 0.05  # [m]
-        step_width = 0.5
-        step_height = 0.25
-        slope_threshold = 0.75
-
-        terrain_width = block_width
-        terrain_length = block_length
-        num_rows = 1
-        num_cols = 1
+        num_rows = 4
+        num_cols = 2
 
         static_friction = 1.0
         dynamic_friction = 1.0
@@ -102,7 +114,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
                 # "down",
                 # "tilted_ramp",
                 "stairsup",
-                # "stairsdown",
+                "stairsdown",
                 # "discrete_rect",
                 # "slope",
                 # "wave",
@@ -445,22 +457,22 @@ class H1_41RoughCfg(LeggedRobotCfg):
 
         class scales(LeggedRobotCfg.rewards.scales):
 
-            # go1_rough
-            tracking_lin_vel = 1.
-            tracking_ang_vel = 1.
-            # what？
-            energy_substeps = -2e-7     # 对human要降
-            stand_still = -1.
-            # peculiar joints' error
-            # dof_error_named = -1.
-            dof_error = -0.005
-            collision = -0.05
-            lazy_stop = -3.
-            # penalty for hardware safety
-            exceed_dof_pos_limits = -0.4
-            exceed_torque_limits_l1norm = -0.4
-            dof_vel_limits = -0.4
-            penetrate_depth = -0.005
+            # # go1_rough
+            # tracking_lin_vel = 1.
+            # tracking_ang_vel = 1.
+            # # what？
+            # energy_substeps = -2e-7     # 对human要降
+            # stand_still = -1.
+            # # peculiar joints' error
+            # # dof_error_named = -1.
+            # dof_error = -0.005
+            # collision = -0.05
+            # lazy_stop = -3.
+            # # penalty for hardware safety
+            # exceed_dof_pos_limits = -0.4
+            # exceed_torque_limits_l1norm = -0.4
+            # dof_vel_limits = -0.4
+            # penetrate_depth = -0.005
 
             # h1_origin
             # tracking_lin_vel = 1.0
@@ -501,7 +513,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
             # hand_sup = -100.0
 
 # RunnerCfg
-class H1_41RoughCfgPPO(LeggedRobotCfgPPO):
+class H1_41_StairCfgPPO(LeggedRobotCfgPPO):
     class policy:
         init_noise_std = 0.8
         actor_hidden_dims = [400, 200, 100]
@@ -512,13 +524,35 @@ class H1_41RoughCfgPPO(LeggedRobotCfgPPO):
         rnn_hidden_size =  256
         rnn_num_layers = 1
 
-        encoder_component_names = ["height_measurements"]
-        encoder_class_name = "MlpModel"
-        class encoder_kwargs:
-            hidden_sizes = [128, 64]
-            nonlinearity = "CELU"
+        # class encoder_kwargs:
+        #     hidden_sizes = [128, 64]
+        #     nonlinearity = "CELU"
+        encoder_component_names = [
+            "height_measurements",
+            # "forward_depth"
+        ]
+        encoder_class_name = [
+            "MlpModel",
+            # "Conv2dHeadModel"
+        ]
+        encoder_kwargs = (
+            {
+                "hidden_sizes": [128, 64],
+                "nonlinearity":"CELU",
+            },
+            # {
+            #     "channels" : [16, 32, 32],
+            #     "kernel_sizes" : [5, 4, 3],
+            #     "strides" : [2, 2, 1],
+            #     "hidden_sizes" : [128],
+            #     "use_maxpool" : True,
+            #     "nonlinearity" : "LeakyReLU",
+            # }
+        )
         encoder_output_size = 32
+        # critic will follow actor
         critic_encoder_component_names = ["height_measurements"]
+        critic_encoder_class_name = "MlpModel"
 
     class algorithm(LeggedRobotCfgPPO.algorithm):
         entropy_coef = 1e-2
