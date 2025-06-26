@@ -1,5 +1,6 @@
 * BarrierTrack provides a policy for diverse terrains traverse.
 * isgym默认不同env不会碰撞
+* what's n_blocks_per_track?
 
 ![img.png](assets/env_origin.png)
 

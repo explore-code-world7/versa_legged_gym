@@ -9,7 +9,8 @@ tensorboard   --logdir="logs/h1_41/Jun15_11-34-46_hidden_256_dof_acc_2e-8_dof_po
 python  legged_gym/legged_gym/scripts/train.py  --task=h1_41   --num_envs 16
 
 # train
-python  legged_gym/legged_gym/scripts/train.py  --task=h1_41  --headless  --max_iterations 1000 --sim_dev "cuda:0" --rl_device "cuda:1"  --run_name "hidden_256"
+python  legged_gym/legged_gym/scripts/train.py  --task=h1_41  --headless  --max_iterations 2000 --sim_dev "cuda:4" --rl_device "cuda:5"  --run_name "hidden_256_plane_height_field"
+
 
 # resume
 python  legged_gym/legged_gym/scripts/train.py  --task=h1_41  --headless --load_run="Jun17_17-20-54_lstm_256"  --checkpoint=-1  --resume  --sim_dev cuda:2  --rl_device cuda:3  --max_iterations=1000

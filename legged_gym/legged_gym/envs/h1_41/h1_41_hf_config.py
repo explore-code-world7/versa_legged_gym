@@ -3,7 +3,7 @@ import numpy as np
 
 # 也许可以把torso固定了
 # EnvCfg
-class H1_41RoughCfg(LeggedRobotCfg):
+class H1_41_HF_RoughCfg(LeggedRobotCfg):
     # class normalization(LeggedRobotCfg.normalization):
     #     # class obs_scales(LeggedRobotCfg.normalization.obs_scales):
     #     #     # lin_vel = 2.0
@@ -14,18 +14,18 @@ class H1_41RoughCfg(LeggedRobotCfg):
     #     #     # height_measurements = 0.5
     #         forward_depth = 0.01
 
-    # class commands(LeggedRobotCfg.commands):
-    #     # resampling_time = 5 # [s]
-    #     lin_cmd_cutoff = 0.2
-    #     ang_cmd_cutoff = 0.2
-    #     is_goal_based = True
-    #     class goal_based:
-    #         # the ratios are related to the goal position in robot frame
-    #         x_ratio = None # sample from lin_vel_x range
-    #         y_ratio = 1.2
-    #         yaw_ratio = 1.
-    #         follow_cmd_cutoff = True
-    #         x_stop_by_yaw_threshold = 1. # stop when yaw is over this threshold [rad]
+    class commands(LeggedRobotCfg.commands):
+        # resampling_time = 5 # [s]
+        lin_cmd_cutoff = 0.2
+        ang_cmd_cutoff = 0.2
+        is_goal_based = True
+        class goal_based:
+            # the ratios are related to the goal position in robot frame
+            x_ratio = None # sample from lin_vel_x range
+            y_ratio = 1.2
+            yaw_ratio = 1.
+            follow_cmd_cutoff = True
+            x_stop_by_yaw_threshold = 1. # stop when yaw is over this threshold [rad]
 
     class termination:
         # additional factors that determines whether to terminates the episode
@@ -221,7 +221,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
             "dof_pos",      # 41
             "dof_vel",      # 41
             "last_actions", # 41
-            # "height_measurements",
+            "height_measurements",
             # "forward_depth",
         ]
         privileged_obs_components = [
@@ -232,7 +232,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
             "dof_pos",  # 41
             "dof_vel",  # 41
             "last_actions",  # 41
-            # "height_measurements",
+            "height_measurements",
             # "forward_depth",
         ]
         num_envs = 2048
@@ -508,7 +508,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
             # hand_sup = -100.0
 
 # RunnerCfg
-class H1_41RoughCfgPPO(LeggedRobotCfgPPO):
+class H1_41_HF_RoughCfgPPO(LeggedRobotCfgPPO):
     class policy:
         init_noise_std = 0.8
         actor_hidden_dims = [400, 200, 100]
@@ -519,35 +519,35 @@ class H1_41RoughCfgPPO(LeggedRobotCfgPPO):
         rnn_hidden_size =  256
         rnn_num_layers = 1
 
-        # # class encoder_kwargs:
-        # #     hidden_sizes = [128, 64]
-        # #     nonlinearity = "CELU"
-        # encoder_component_names = [
-        #     "height_measurements",
-        #     # "forward_depth"
-        # ]
-        # encoder_class_name = [
-        #     "MlpModel",
-        #     # "Conv2dHeadModel"
-        # ]
-        # encoder_kwargs = (
-        #     {
-        #         "hidden_sizes": [128, 64],
-        #         "nonlinearity":"CELU",
-        #     },
-        #     # {
-        #     #     "channels" : [16, 32, 32],
-        #     #     "kernel_sizes" : [5, 4, 3],
-        #     #     "strides" : [2, 2, 1],
-        #     #     "hidden_sizes" : [128],
-        #     #     "use_maxpool" : True,
-        #     #     "nonlinearity" : "LeakyReLU",
-        #     # }
-        # )
-        # encoder_output_size = 32
-        # # critic will follow actor
-        # critic_encoder_component_names = ["height_measurements"]
-        # critic_encoder_class_name = "MlpModel"
+        # class encoder_kwargs:
+        #     hidden_sizes = [128, 64]
+        #     nonlinearity = "CELU"
+        encoder_component_names = [
+            "height_measurements",
+            # "forward_depth"
+        ]
+        encoder_class_name = [
+            "MlpModel",
+            # "Conv2dHeadModel"
+        ]
+        encoder_kwargs = (
+            {
+                "hidden_sizes": [128, 64],
+                "nonlinearity":"CELU",
+            },
+            # {
+            #     "channels" : [16, 32, 32],
+            #     "kernel_sizes" : [5, 4, 3],
+            #     "strides" : [2, 2, 1],
+            #     "hidden_sizes" : [128],
+            #     "use_maxpool" : True,
+            #     "nonlinearity" : "LeakyReLU",
+            # }
+        )
+        encoder_output_size = 32
+        # critic will follow actor
+        critic_encoder_component_names = ["height_measurements"]
+        critic_encoder_class_name = "MlpModel"
 
 
     class algorithm(LeggedRobotCfgPPO.algorithm):
@@ -555,8 +555,8 @@ class H1_41RoughCfgPPO(LeggedRobotCfgPPO):
 
     class runner(LeggedRobotCfgPPO.runner):
         # policy_class_name = "ActorCritic"
-        policy_class_name = "ActorCriticRecurrent"
-        # policy_class_name = "EncoderActorCriticRecurrent"
+        # policy_class_name = "ActorCriticRecurrent"
+        policy_class_name = "EncoderActorCriticRecurrent"
         # policy_class_name = "TriActCritic"
         algorithm_class_name = "PPO"
         max_iterations = 1000

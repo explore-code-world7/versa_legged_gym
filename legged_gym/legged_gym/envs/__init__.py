@@ -73,6 +73,8 @@ task_registry.register( "go1_remote", LeggedRobot, Go1RemoteCfg(), Go1RemoteCfgP
 
 
 from legged_gym.envs.h1_41.h1_41_config import H1_41RoughCfg, H1_41RoughCfgPPO
+from legged_gym.envs.h1_41.h1_41_hf_config import H1_41_HF_RoughCfg, H1_41_HF_RoughCfgPPO
 from legged_gym.envs.h1_41.h1_41_env import H1_41Robot
-task_registry.register( "h1_41", H1_41Robot, H1_41RoughCfg(), H1_41RoughCfgPPO())
 
+task_registry.register( "h1_41", H1_41Robot, H1_41RoughCfg(), H1_41RoughCfgPPO())
+task_registry.register( "h1_41_hf", H1_41Robot, H1_41_HF_RoughCfg(), H1_41_HF_RoughCfgPPO())

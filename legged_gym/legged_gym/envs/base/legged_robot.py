@@ -679,7 +679,7 @@ class LeggedRobot(BaseTask):
             self.commands[:, 2] = torch.clip(0.5*wrap_to_pi(self.commands[:, 3] - heading), -1., 1.)
 
         # log max power across current env step
-        self.max_power_per_timestep = torch.minimum(
+        self.max_power_per_timestep = torch.maximum(
             self.max_power_per_timestep,
             torch.max(torch.sum(self.substep_torques * self.substep_dof_vel, dim= -1), dim= -1)[0],
         )
