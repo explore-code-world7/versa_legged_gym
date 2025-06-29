@@ -8,6 +8,11 @@ tensorboard   --logdir="logs/h1_41/Jun15_11-34-46_hidden_256_dof_acc_2e-8_dof_po
 # overview
 python  legged_gym/legged_gym/scripts/train.py  --task=h1_41   --num_envs 16
 
+python  legged_gym/legged_gym/scripts/train.py  --task=go2_field  --headless  --max_iterations 2000 --sim_dev "cuda:6" --rl_device "cuda:7"
+
+python  legged_gym/legged_gym/scripts/train.py  --task=h1_41_stair  --headless  --max_iterations 2000 --sim_dev "cuda:4" --rl_device "cuda:5"
+
+
 # train
 python  legged_gym/legged_gym/scripts/train.py  --task=h1_41  --headless  --max_iterations 2000 --sim_dev "cuda:4" --rl_device "cuda:5"  --run_name "hidden_256_plane_height_field"
 
@@ -16,9 +21,9 @@ python  legged_gym/legged_gym/scripts/train.py  --task=h1_41  --headless  --max_
 python  legged_gym/legged_gym/scripts/train.py  --task=h1_41  --headless --load_run="Jun17_17-20-54_lstm_256"  --checkpoint=-1  --resume  --sim_dev cuda:2  --rl_device cuda:3  --max_iterations=1000
 
 # play
-python  legged_gym/legged_gym/scripts/play.py  --task=h1_41_hf  --load_run="Jun26_16-49-35_hidden_256_plane_height_field" --checkpoint=-1 --num_envs=4
+python  legged_gym/legged_gym/scripts/play.py  --task=h1_41_stair  --load_run="Jun29_19-18-04_" --checkpoint=-1 --num_envs=4
 
-python  legged_gym/legged_gym/scripts/play.py  --task=h1_41  --load_run="Jun26_17-04-29_hidden_256_plane_hf_measure" --checkpoint=-1 --num_envs=4
+python  legged_gym/legged_gym/scripts/play.py  --task=h1_41_stair  --load_run="Jun26_17-04-29_hidden_256_plane_hf_measure" --checkpoint=-1 --num_envs=4
 
 # terrain_test
 python  legged_gym/legged_gym/scripts/play.py  --task=h1_2  --load_run="Jun11_18-27-32_" --checkpoint=-1 --num_envs=4

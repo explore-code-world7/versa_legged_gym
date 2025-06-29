@@ -182,6 +182,7 @@ class LeggedRobotFieldMixin:
                         ) # lin vel x/y
                     self.gym.set_actor_root_state_tensor(self.sim, gymtorch.unwrap_tensor(self.all_root_states))
                 return
+
         # return using super()._push_robots() if not all conditions are met
         return super()._push_robots()
     

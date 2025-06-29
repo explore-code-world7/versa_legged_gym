@@ -1,5 +1,7 @@
 from legged_gym.envs.base.legged_robot import LeggedRobot
 from legged_gym.envs.base.legged_robot_field import LeggedRobotField
+from legged_gym.envs.base.robot_field_noisy import RobotFieldNoisy
+
 
 from isaacgym.torch_utils import *
 from isaacgym import gymtorch, gymapi, gymutil
@@ -10,39 +12,42 @@ import os
 import numpy as np
 
 
-class H1_41_Field_Robot(LeggedRobotField):
+class H1_41_Field_Robot(RobotFieldNoisy):
     def _init_foot(self):
         self.feet_num = len(self.feet_indices)
 
-        rigid_body_state = self.gym.acquire_rigid_body_state_tensor(self.sim)
-        self.rigid_body_states = gymtorch.wrap_tensor(rigid_body_state)
-        self.rigid_body_states_view = self.rigid_body_states.view(self.num_envs, -1, 13)
-        self.feet_state = self.rigid_body_states_view[:, self.feet_indices, :]
+        # rigid_body_state = self.gym.acquire_rigid_body_state_tensor(self.sim)
+        # self.rigid_body_states = gymtorch.wrap_tensor(rigid_body_state)
+        # self.rigid_body_states_view = self.all_rigid_body_states.view(self.num_envs, -1, 13)
+        # self.feet_state = self.rigid_body_states_view
+        self.feet_state = self.all_rigid_body_states.view(self.num_envs, -1, 13)[:, self.feet_indices, :]
         self.feet_pos = self.feet_state[:, :, :3]
         self.feet_vel = self.feet_state[:, :, 7:10]
+        self.leg_phase = torch.zeros(self.num_envs, 2, device=self.device, dtype=torch.long)
 
     # further modification
     def _init_buffers(self):
         super()._init_buffers()
         self._init_foot()
 
-    def update_feet_state(self):
-        self.gym.refresh_rigid_body_state_tensor(self.sim)
+    # def update_feet_state(self):
+    #     self.gym.refresh_rigid_body_state_tensor(self.sim)
 
-        self.feet_state = self.rigid_body_states_view[:, self.feet_indices, :]
-        self.feet_pos = self.feet_state[:, :, :3]
-        self.feet_vel = self.feet_state[:, :, 7:10]
+        # 下面自动更新
+        # self.feet_state = self.rigid_body_states_view[:, self.feet_indices, :]
+        # self.feet_pos = self.feet_state[:, :, :3]
+        # self.feet_vel = self.feet_state[:, :, 7:10]
 
     # 对post_physics_step_callback的进一步修改没问题
     def _post_physics_step_callback(self):
-        self.update_feet_state()
+        # self.update_feet_state()
 
         period = 0.8
         offset = 0.5
-        self.phase = (self.episode_length_buf * self.dt) % period / period
-        self.phase_left = self.phase
-        self.phase_right = (self.phase + offset) % 1
-        self.leg_phase = torch.cat([self.phase_left.unsqueeze(1), self.phase_right.unsqueeze(1)], dim=-1)
+        phase = (self.episode_length_buf * self.dt) % period / period
+        self.leg_phase[:, 0] = phase
+        self.leg_phase[:, 1] = (phase + offset) % 1
+        # torch.cuda.empty_cache()
 
         return super()._post_physics_step_callback()
 

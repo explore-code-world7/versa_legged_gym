@@ -3,7 +3,7 @@ import numpy as np
 
 # 也许可以把torso固定了
 # EnvCfg
-class H1_41_StairCfg(LeggedRobotCfg):
+class H1_12_StairCfg(LeggedRobotCfg):
 
     # class normalization(LeggedRobotCfg.normalization):
     #     # class obs_scales(LeggedRobotCfg.normalization.obs_scales):
@@ -240,7 +240,7 @@ class H1_41_StairCfg(LeggedRobotCfg):
             "last_actions",  # 41
             "height_measurements",
         ]
-        num_envs = 1024
+        num_envs = 4096
 
     class noise(LeggedRobotCfg.noise):
         add_noise=False
@@ -298,54 +298,54 @@ class H1_41_StairCfg(LeggedRobotCfg):
             'right_ankle_pitch_joint': -0.2,
             'right_ankle_roll_joint': 0.0,
 
-            # contribute to revolution of torso arount pelvis
-            'torso_joint': 0,
-
-            # 14
-            'left_shoulder_pitch_joint': 0.4,
-            'left_shoulder_roll_joint': 0,
-            'left_shoulder_yaw_joint': 0,
-            'left_elbow_pitch_joint': 0.3,
-            'left_elbow_roll_joint': 0,
-            'left_wrist_pitch_joint': 0,
-            'left_wrist_yaw_joint': 0,
-
-            'right_shoulder_pitch_joint': 0.4,
-            'right_shoulder_roll_joint': 0,
-            'right_shoulder_yaw_joint': 0,
-            'right_elbow_pitch_joint': 0.3,
-            'right_elbow_roll_joint': 0,
-            'right_wrist_pitch_joint': 0,
-            'right_wrist_yaw_joint': 0,
+            # # contribute to revolution of torso arount pelvis
+            # 'torso_joint': 0,
 
             # # 14
-            'L_base_link_joint': 0.0,
-            # 'L_thumb_proximal_yaw_joint': 0,
-            # 'L_thumb_proximal_pitch_joint': 0,
-            # 'L_thumb_intermediate_joint': 0,
-            # 'L_thumb_distal_joint': 0,
-            'L_index_proximal_joint': 0,
-            'L_index_intermediate_joint': 0,
-            'L_middle_proximal_joint': 0,
-            'L_middle_intermediate_joint': 0,
-            'L_ring_proximal_joint': 0,
-            'L_ring_intermediate_joint': 0,
-            # 'L_pinky_proximal_joint': 0,
-            # 'L_pinky_intermediate_joint': 0,
+            # 'left_shoulder_pitch_joint': 0.4,
+            # 'left_shoulder_roll_joint': 0,
+            # 'left_shoulder_yaw_joint': 0,
+            # 'left_elbow_pitch_joint': 0.3,
+            # 'left_elbow_roll_joint': 0,
+            # 'left_wrist_pitch_joint': 0,
+            # 'left_wrist_yaw_joint': 0,
 
-            'R_base_link_joint': 0.0,
-            # 'R_thumb_proximal_yaw_joint': 0,
-            # 'R_thumb_proximal_pitch_joint': 0,
-            # 'R_thumb_intermediate_joint': 0,
-            # 'R_thumb_distal_joint': 0,
-            'R_index_proximal_joint': 0,
-            'R_index_intermediate_joint': 0,
-            'R_middle_proximal_joint': 0,
-            'R_middle_intermediate_joint': 0,
-            'R_ring_proximal_joint': 0,
-            'R_ring_intermediate_joint': 0,
-            # 'R_pinky_proximal_joint': 0,
-            # 'R_pinky_intermediate_joint': 0,
+            # 'right_shoulder_pitch_joint': 0.4,
+            # 'right_shoulder_roll_joint': 0,
+            # 'right_shoulder_yaw_joint': 0,
+            # 'right_elbow_pitch_joint': 0.3,
+            # 'right_elbow_roll_joint': 0,
+            # 'right_wrist_pitch_joint': 0,
+            # 'right_wrist_yaw_joint': 0,
+
+            # # # 14
+            # 'L_base_link_joint': 0.0,
+            # # 'L_thumb_proximal_yaw_joint': 0,
+            # # 'L_thumb_proximal_pitch_joint': 0,
+            # # 'L_thumb_intermediate_joint': 0,
+            # # 'L_thumb_distal_joint': 0,
+            # 'L_index_proximal_joint': 0,
+            # 'L_index_intermediate_joint': 0,
+            # 'L_middle_proximal_joint': 0,
+            # 'L_middle_intermediate_joint': 0,
+            # 'L_ring_proximal_joint': 0,
+            # 'L_ring_intermediate_joint': 0,
+            # # 'L_pinky_proximal_joint': 0,
+            # # 'L_pinky_intermediate_joint': 0,
+
+            # 'R_base_link_joint': 0.0,
+            # # 'R_thumb_proximal_yaw_joint': 0,
+            # # 'R_thumb_proximal_pitch_joint': 0,
+            # # 'R_thumb_intermediate_joint': 0,
+            # # 'R_thumb_distal_joint': 0,
+            # 'R_index_proximal_joint': 0,
+            # 'R_index_intermediate_joint': 0,
+            # 'R_middle_proximal_joint': 0,
+            # 'R_middle_intermediate_joint': 0,
+            # 'R_ring_proximal_joint': 0,
+            # 'R_ring_intermediate_joint': 0,
+            # # 'R_pinky_proximal_joint': 0,
+            # # 'R_pinky_intermediate_joint': 0,
         }
 
     class control(LeggedRobotCfg.control):
@@ -361,21 +361,6 @@ class H1_41_StairCfg(LeggedRobotCfg):
             'ankle_pitch_joint': 40.,
             'ankle_roll_joint': 40.,
 
-            # arm
-            'shoulder': 200,  # 2*3
-            'elbow': 200,  # 2*1
-            'wrist': 200,  # 2*3
-
-            # hand
-            'base_link_joint': 200,
-            # 'thumb': 40,
-            'index': 40,
-            'middle': 40,
-            'ring': 40,
-            # 'pinky': 100,
-
-            # torso
-            'torso_joint': 300,
         }  # [N*m/rad]
         damping = {
             'hip_yaw_joint': 2.5,
@@ -385,21 +370,6 @@ class H1_41_StairCfg(LeggedRobotCfg):
             'ankle_pitch_joint': 2.0,
             'ankle_roll_joint': 2.0,
 
-            # arm
-            'shoulder': 4,  # 2*3
-            'elbow': 4,  # 2*1
-            'wrist': 2.5,  # 2*3
-
-            # hand
-            'base_link_joint': 2.5,
-            # 'thumb': 2.0,
-            'index': 2.0,
-            'middle': 2.0,
-            'ring': 2.0,
-            # 'pinky': 2.0,
-
-            # torso
-            'torso_joint': 4.0,
         }  # [N*m/rad]  # [N*m*s/rad]
         # action scale: target angle = actionScale * action + defaultAngle
         action_scale = 0.25
@@ -435,11 +405,11 @@ class H1_41_StairCfg(LeggedRobotCfg):
         init_base_vel_range = [-1., 1.]
 
     class asset(LeggedRobotCfg.asset):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/h1_2/h1_2_41dof.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/h1_2/h1_2_12dof.urdf'
         name = "h1_2"
         foot_name = "ankle_roll"
-        arm_name = ["elbow_pitch", "wrist_yaw", "base_link_joint"]
-        finger_name = ["index", "middle", "ring", ]
+        # arm_name = ["elbow_pitch", "wrist_yaw", "base_link_joint"]
+        # finger_name = ["index", "middle", "ring", ]
 
         penalize_contacts_on = ["hip", "knee"]
         terminate_after_contacts_on = ["pelvis"]
@@ -512,8 +482,9 @@ class H1_41_StairCfg(LeggedRobotCfg):
             torques = 1e-6
             # hand_sup = -100.0
 
+
 # RunnerCfg
-class H1_41_StairCfgPPO(LeggedRobotCfgPPO):
+class H1_12_StairCfgPPO(LeggedRobotCfgPPO):
     class policy:
         init_noise_std = 0.8
         actor_hidden_dims = [400, 200, 100]
@@ -565,4 +536,4 @@ class H1_41_StairCfgPPO(LeggedRobotCfgPPO):
         algorithm_class_name = "PPO"
         max_iterations = 1000
         run_name = ''
-        experiment_name = 'h1_41_stair'
+        experiment_name = 'h1_12_stair'

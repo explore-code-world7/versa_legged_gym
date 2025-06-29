@@ -77,7 +77,10 @@ from legged_gym.envs.h1_41.h1_41_hf_config import H1_41_HF_RoughCfg, H1_41_HF_Ro
 from legged_gym.envs.h1_41.h1_41_stair_config import H1_41_StairCfg, H1_41_StairCfgPPO
 from legged_gym.envs.h1_41.h1_41_env import H1_41Robot
 from legged_gym.envs.h1_41.h1_41_field_env import H1_41_Field_Robot
+from legged_gym.envs.h1_41.h1_12_stair_config import H1_12_StairCfg, H1_12_StairCfgPPO
+
 
 task_registry.register( "h1_41", H1_41Robot, H1_41RoughCfg(), H1_41RoughCfgPPO())
 task_registry.register( "h1_41_hf", H1_41Robot, H1_41_HF_RoughCfg(), H1_41_HF_RoughCfgPPO())
 task_registry.register( "h1_41_stair", H1_41_Field_Robot, H1_41_StairCfg(), H1_41_StairCfgPPO())
+task_registry.register( "h1_12_stair", H1_41_Field_Robot, H1_12_StairCfg(), H1_12_StairCfgPPO())

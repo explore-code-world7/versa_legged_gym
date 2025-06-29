@@ -235,7 +235,7 @@ class H1_41RoughCfg(LeggedRobotCfg):
             # "height_measurements",
             # "forward_depth",
         ]
-        num_envs = 2048
+        num_envs = 1024
 
     class noise(LeggedRobotCfg.noise):
         add_noise=False
@@ -268,10 +268,10 @@ class H1_41RoughCfg(LeggedRobotCfg):
             latency_resampling_time = 5.0 # [s]
 
     class viewer(LeggedRobotCfg.viewer):
-        # debug_viz = True
-        # draw_measure_heights = True
-        # draw_sensors = True
-        # draw_volume_sample_points = True
+        debug_viz = False
+        draw_measure_heights = False
+        draw_sensors = False
+        draw_volume_sample_points = False
         pos = [-1., 4., 1.0]
         lookat = [0., 4., 0.3]
 

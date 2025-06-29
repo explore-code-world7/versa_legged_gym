@@ -51,6 +51,7 @@ from legged_gym.utils.math import quat_apply_yaw, wrap_to_pi, torch_rand_sqrt_fl
 from legged_gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
 from PIL import Image
+import GPUtil
 
 # use obs_component to define observations
 
@@ -84,9 +85,13 @@ class LeggedRobot(BaseTask):
         if not self.headless:
             self.set_camera(self.cfg.viewer.pos, self.cfg.viewer.lookat)
         self._init_buffers()
+        print("after init_buffer function, robot pos = ", self.all_rigid_body_states[0, :3])
+
         self._prepare_reward_function()
         self.init_done = True
         self.frame_no = 0
+
+        print("in init function, robot pos = ", self.all_rigid_body_states[0, :3])
 
     def step(self, actions):
         """ Apply actions, simulate, call self.post_physics_step()
@@ -94,26 +99,64 @@ class LeggedRobot(BaseTask):
         Args:
             actions (torch.Tensor): Tensor of shape (num_envs, num_actions_per_env)
         """
+
+        if self.frame_no == 0:
+            print("in frame 0")
+            print("env_origins", self.env_origins[0],", robot_position", self.all_root_states[0, :3])
+            print(f"original step = ", self.all_rigid_body_states[0, :3])
+
+        # print(f"step_start, Memory Used: {GPUtil.getGPUs()[int(self.device[-1])].memoryUsed} MB")        
         self.pre_physics_step(actions)
+        # print("actions.requires_grad", actions.requires_grad)
         # step physics and render each frame
+        torque_max = torch.tensor(0.0)
         self.render()
         for dec_i in range(self.cfg.control.decimation):
+            # 出在上半段
+            # print(f"before_pre_decimation, Memory Used: {GPUtil.getGPUs()[int(self.device[-1])].memoryUsed} MB")            
             self.pre_decimation_step(dec_i)
+
+            # print(f"after_pre_decimation, Memory Used: {GPUtil.getGPUs()[int(self.device[-1])].memoryUsed} MB")            
             self.torques = self._compute_torques(self.actions).view(self.torques.shape)
+            
+            torque_max = torch.max(self.torques, torque_max)[0].max()
+
             self.gym.set_dof_actuation_force_tensor(self.sim, gymtorch.unwrap_tensor(self.torques))
+            # if torch.isinf(self.torques).any():
+            #     print("has inf", torch.isinf(self.torques).sum())
+            # if torch.isnan(self.torques).any():
+            #     print("has nan", torch.isnan(self.torques).sum())
+                
+            # bef_memory = GPUtil.getGPUs()[int(self.device[-1])].memoryUsed
             self.gym.simulate(self.sim)
+            # aft_memory = GPUtil.getGPUs()[int(self.device[-1])].memoryUsed
+            # if aft_memory - bef_memory>0:
+            #     print(f"after_simulate, Memory Increase: {aft_memory - bef_memory} MB")
+
             if self.device == 'cpu':
                 self.gym.fetch_results(self.sim, True)
             self.gym.refresh_dof_state_tensor(self.sim)
+
+            # print(f"after_refresh, Memory Used: {GPUtil.getGPUs()[int(self.device[-1])].memoryUsed} MB")
             self.post_decimation_step(dec_i)
+            # print(f"after_post_decimation, Memory Used: {GPUtil.getGPUs()[int(self.device[-1])].memoryUsed} MB")
+
+        # print("torch_max", torque_max.cpu().item())
+        # del torque_max
+        # print(f"before_post, Memory Used: {GPUtil.getGPUs()[int(self.device[-1])].memoryUsed} MB")
         self.post_physics_step()
         self.frame_no += 1
+
+        print("env_origins", self.env_origins[0],", robot_position", self.all_root_states[0, :3])
+        print(f"original step = ", self.all_rigid_body_states[0, :3])
+        # import pdb; pdb.set_trace()
 
         # return clipped obs, clipped states (None), rewards, dones and infos
         clip_obs = self.cfg.normalization.clip_observations
         self.obs_buf = torch.clip(self.obs_buf, -clip_obs, clip_obs)
         if self.privileged_obs_buf is not None:
             self.privileged_obs_buf = torch.clip(self.privileged_obs_buf, -clip_obs, clip_obs)
+        # print(f"step_end, Memory Used: {GPUtil.getGPUs()[int(self.device[-1])].memoryUsed} MB")
         return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
 
     def pre_physics_step(self, actions):
@@ -298,6 +341,9 @@ class LeggedRobot(BaseTask):
         self._resample_commands(env_ids)
         self._reset_buffers(env_ids)
 
+        if self.frame_no == 0:
+            print(f"in first reset root states done, ", self.all_root_states[0, :3])
+            print(f"original step = ", self.all_rigid_body_states[0, :3])
 
     def compute_reward(self):
         """ Compute rewards
@@ -551,8 +597,8 @@ class LeggedRobot(BaseTask):
         """
         self.up_axis_idx = 2 # 2 for z, 1 for y -> adapt gravity accordingly
         self.sim = self.gym.create_sim(self.sim_device_id, self.graphics_device_id, self.physics_engine, self.sim_params)
-        print("graphics_device_id")
-        print(self.graphics_device_id)
+        # print("graphics_device_id")
+        # print(self.graphics_device_id)
         self._create_terrain()
         self._create_envs()
 
@@ -770,6 +816,11 @@ class LeggedRobot(BaseTask):
         Args:
             env_ids (List[int]): Environemnt ids
         """
+
+        if self.frame_no == 0:
+            print(f"in first reset root states, ", self.all_root_states[0, :3])
+            print(f"original step = ", self.all_rigid_body_states[0, :3])
+
         # base position
         if self.custom_origins:
             self.root_states[env_ids] = self.base_init_state
@@ -781,6 +832,10 @@ class LeggedRobot(BaseTask):
                 self.root_states[env_ids, :2] += torch_rand_float(-1., 1., (len(env_ids), 2), device=self.device) # xy position within 1m of the center
         else:
             self.root_states[env_ids] = self.base_init_state
+
+        if self.frame_no == 0:
+            print(f"after custom_origins, ", self.all_root_states[0, :3])
+            print(f"original step = ", self.all_rigid_body_states[0, :3])
 
         # base rotation (roll and pitch)
         if hasattr(self.cfg.domain_rand, "init_base_rot_range"):
@@ -852,6 +907,7 @@ class LeggedRobot(BaseTask):
         self.gym.set_actor_root_state_tensor_indexed(self.sim,
                                                      gymtorch.unwrap_tensor(self.all_root_states),
                                                      gymtorch.unwrap_tensor(actor_idx_int32), len(actor_idx_int32))
+
 
     def _push_robots(self):
         """ Random pushes the robots. Emulates an impulse by setting a randomized base velocity. 
@@ -970,12 +1026,13 @@ class LeggedRobot(BaseTask):
         """ Initialize torch tensors which will contain simulation states and processed quantities
         """
         # get gym GPU state tensors
-        actor_root_state = self.gym.acquire_actor_root_state_tensor(self.sim)
-        dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
-        net_contact_forces = self.gym.acquire_net_contact_force_tensor(self.sim)
         self.gym.refresh_dof_state_tensor(self.sim)
         self.gym.refresh_actor_root_state_tensor(self.sim)
         self.gym.refresh_net_contact_force_tensor(self.sim)
+        
+        actor_root_state = self.gym.acquire_actor_root_state_tensor(self.sim)
+        dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
+        net_contact_forces = self.gym.acquire_net_contact_force_tensor(self.sim)
 
         # create some wrapper tensors for different slices
         self.all_root_states = gymtorch.wrap_tensor(actor_root_state)
@@ -1427,7 +1484,10 @@ class LeggedRobot(BaseTask):
             pos = self.env_origins[i].clone()
             pos[:2] += torch_rand_float(-1., 1., (2,1), device=self.device).squeeze(1)
             start_pose.p = gymapi.Vec3(*pos)
-                
+
+            if i==0:
+                print("in env 0", self.env_origins[0])
+
             rigid_shape_props = self._process_rigid_shape_props(rigid_shape_props_asset, i)
             self.gym.set_asset_rigid_shape_properties(robot_asset, rigid_shape_props)
             actor_handle = self.gym.create_actor(env_handle, robot_asset, start_pose, self.cfg.asset.name, i, self.cfg.asset.self_collisions, 0)
@@ -1954,3 +2014,9 @@ class LeggedRobot(BaseTask):
             self.dof_pos_limits[:, 1] - self.dof_pos_limits[:, 0]
         ).unsqueeze(0).unsqueeze(0) # shape: (n_envs, n_substeps, n_dofs)
         return torch.square(substep_ratio).sum(dim= 1).sum(dim= 1)
+
+    def print_gpu_info(self):
+        sim_gpu = GPUtil.getGPUs()[int(self.devive[-1])]
+        print(f"Memory Used: {sim_gpu.memoryUsed} MB")        
+        # sim_device = torch.device("cuda:0")
+        # print(f"Sim, Allocated memory: {torch.cuda.memory_allocated(sim_device) / (1024 ** 2)} MB, Cached memory: {torch.cuda.memory_reserved(sim_device) / (1024 ** 2)} MB")

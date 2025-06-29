@@ -152,7 +152,11 @@ def play(args):
 
     # prepare environment
     env, _ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
+    print("after env initialization, robot pos = ", env.all_root_states[0, :3])
     env.reset()
+    print("play reset, robot pos = ", env.all_root_states[0, :3])
+    # import pdb; pdb.set_trace()
+
     print("terrain_levels:", env.terrain_levels.float().mean(), env.terrain_levels.float().max(), env.terrain_levels.float().min())
     obs = env.get_observations()
     critic_obs = env.get_privileged_observations()

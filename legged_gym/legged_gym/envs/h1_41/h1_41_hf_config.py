@@ -499,4 +499,4 @@ class H1_41_HF_RoughCfgPPO(LeggedRobotCfgPPO):
         algorithm_class_name = "PPO"
         max_iterations = 1000
         run_name = ''
-        experiment_name = 'h1_41'
+        experiment_name = 'h1_41_hf'
