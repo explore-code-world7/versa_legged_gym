@@ -200,7 +200,8 @@ class LeggedRobotFieldMixin:
                 move_up = moved
             move_down = less_moved
             return move_up, move_down
-        
+
+        # import pdb; pdb.set_trace()
         passed_depths = self.terrain.get_passed_obstacle_depths(
             self.terrain_levels[env_ids],
             self.terrain_types[env_ids],

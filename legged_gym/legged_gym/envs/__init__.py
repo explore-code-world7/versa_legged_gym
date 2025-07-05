@@ -72,15 +72,26 @@ from .go1.go1_remote_config import Go1RemoteCfg, Go1RemoteCfgPPO
 task_registry.register( "go1_remote", LeggedRobot, Go1RemoteCfg(), Go1RemoteCfgPPO() )
 
 
-from legged_gym.envs.h1_41.h1_41_config import H1_41RoughCfg, H1_41RoughCfgPPO
-from legged_gym.envs.h1_41.h1_41_hf_config import H1_41_HF_RoughCfg, H1_41_HF_RoughCfgPPO
-from legged_gym.envs.h1_41.h1_41_stair_config import H1_41_StairCfg, H1_41_StairCfgPPO
+
 from legged_gym.envs.h1_41.h1_41_env import H1_41Robot
-from legged_gym.envs.h1_41.h1_41_field_env import H1_41_Field_Robot
+from legged_gym.envs.h1_41.h1_field_env import H1_Field_Robot
 from legged_gym.envs.h1_41.h1_12_stair_config import H1_12_StairCfg, H1_12_StairCfgPPO
 
+from legged_gym.envs.h1_41.h1_41_config import H1_41RoughCfg, H1_41RoughCfgPPO
+from legged_gym.envs.h1_41.h1_41_hf_config import H1_41_HF_RoughCfg, H1_41_HF_RoughCfgPPO
+from legged_gym.envs.h1_41.h1_45_hf_config import H1_45_HF_RoughCfg, H1_45_HF_RoughCfgPPO
+from legged_gym.envs.h1_41.h1_51_hf_config import H1_51_HF_RoughCfg, H1_51_HF_RoughCfgPPO
 
 task_registry.register( "h1_41", H1_41Robot, H1_41RoughCfg(), H1_41RoughCfgPPO())
 task_registry.register( "h1_41_hf", H1_41Robot, H1_41_HF_RoughCfg(), H1_41_HF_RoughCfgPPO())
-task_registry.register( "h1_41_stair", H1_41_Field_Robot, H1_41_StairCfg(), H1_41_StairCfgPPO())
-task_registry.register( "h1_12_stair", H1_41_Field_Robot, H1_12_StairCfg(), H1_12_StairCfgPPO())
+task_registry.register( "h1_45_hf", H1_41Robot, H1_45_HF_RoughCfg(), H1_45_HF_RoughCfgPPO())
+task_registry.register( "h1_51_hf", H1_41Robot, H1_51_HF_RoughCfg(), H1_51_HF_RoughCfgPPO())
+
+from legged_gym.envs.h1_41.h1_41_stair_config import H1_41_StairCfg, H1_41_StairCfgPPO
+from legged_gym.envs.h1_41.h1_45_stair_config import H1_45_StairCfg, H1_45_StairCfgPPO
+from legged_gym.envs.h1_41.h1_51_stair_config import H1_51_StairCfg, H1_51_StairCfgPPO
+
+task_registry.register( "h1_12_stair", H1_Field_Robot, H1_12_StairCfg(), H1_12_StairCfgPPO())
+task_registry.register( "h1_41_stair", H1_Field_Robot, H1_41_StairCfg(), H1_41_StairCfgPPO())
+task_registry.register( "h1_45_stair", H1_Field_Robot, H1_45_StairCfg(), H1_45_StairCfgPPO())
+task_registry.register( "h1_51_stair", H1_Field_Robot, H1_51_StairCfg(), H1_51_StairCfgPPO())

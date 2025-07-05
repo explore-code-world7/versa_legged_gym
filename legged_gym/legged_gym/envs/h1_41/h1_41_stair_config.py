@@ -240,7 +240,7 @@ class H1_41_StairCfg(LeggedRobotCfg):
             "last_actions",  # 41
             "height_measurements",
         ]
-        num_envs = 1024
+        num_envs = 4096
 
     class noise(LeggedRobotCfg.noise):
         add_noise=False
@@ -435,7 +435,7 @@ class H1_41_StairCfg(LeggedRobotCfg):
         init_base_vel_range = [-1., 1.]
 
     class asset(LeggedRobotCfg.asset):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/h1_2/h1_2_41dof.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/h1_2/h1_2_41dof_cut_collision.urdf'
         name = "h1_2"
         foot_name = "ankle_roll"
         arm_name = ["elbow_pitch", "wrist_yaw", "base_link_joint"]
@@ -443,7 +443,7 @@ class H1_41_StairCfg(LeggedRobotCfg):
 
         penalize_contacts_on = ["hip", "knee"]
         terminate_after_contacts_on = ["pelvis"]
-        self_collisions = 0  # 1 to disable, 0 to enable...Wbitwise filter
+        self_collisions = 1  # 1 to disable, 0 to enable...Wbitwise filter
         flip_visual_attachments = False
         armature = 1e-3
 

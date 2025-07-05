@@ -100,11 +100,6 @@ class LeggedRobot(BaseTask):
             actions (torch.Tensor): Tensor of shape (num_envs, num_actions_per_env)
         """
 
-        if self.frame_no == 0:
-            print("in frame 0")
-            print("env_origins", self.env_origins[0],", robot_position", self.all_root_states[0, :3])
-            print(f"original step = ", self.all_rigid_body_states[0, :3])
-
         # print(f"step_start, Memory Used: {GPUtil.getGPUs()[int(self.device[-1])].memoryUsed} MB")        
         self.pre_physics_step(actions)
         # print("actions.requires_grad", actions.requires_grad)
@@ -147,8 +142,6 @@ class LeggedRobot(BaseTask):
         self.post_physics_step()
         self.frame_no += 1
 
-        print("env_origins", self.env_origins[0],", robot_position", self.all_root_states[0, :3])
-        print(f"original step = ", self.all_rigid_body_states[0, :3])
         # import pdb; pdb.set_trace()
 
         # return clipped obs, clipped states (None), rewards, dones and infos
@@ -341,9 +334,6 @@ class LeggedRobot(BaseTask):
         self._resample_commands(env_ids)
         self._reset_buffers(env_ids)
 
-        if self.frame_no == 0:
-            print(f"in first reset root states done, ", self.all_root_states[0, :3])
-            print(f"original step = ", self.all_rigid_body_states[0, :3])
 
     def compute_reward(self):
         """ Compute rewards
@@ -817,10 +807,6 @@ class LeggedRobot(BaseTask):
             env_ids (List[int]): Environemnt ids
         """
 
-        if self.frame_no == 0:
-            print(f"in first reset root states, ", self.all_root_states[0, :3])
-            print(f"original step = ", self.all_rigid_body_states[0, :3])
-
         # base position
         if self.custom_origins:
             self.root_states[env_ids] = self.base_init_state
@@ -832,10 +818,6 @@ class LeggedRobot(BaseTask):
                 self.root_states[env_ids, :2] += torch_rand_float(-1., 1., (len(env_ids), 2), device=self.device) # xy position within 1m of the center
         else:
             self.root_states[env_ids] = self.base_init_state
-
-        if self.frame_no == 0:
-            print(f"after custom_origins, ", self.all_root_states[0, :3])
-            print(f"original step = ", self.all_rigid_body_states[0, :3])
 
         # base rotation (roll and pitch)
         if hasattr(self.cfg.domain_rand, "init_base_rot_range"):

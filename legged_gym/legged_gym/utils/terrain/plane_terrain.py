@@ -158,6 +158,11 @@ class PlaneTerrain:
         terrain.height_field_raw[:,:] += elevate_height
         return terrain
 
+# 如何获取全局坐标系下的高度
+# 1. if height_field_raw是全局坐标，直接按索引即可；
+# 2. if height_field_raw是环境下的坐标, 那self.vertices赋值后直接add_trimesh_to_sim错误，不可能
+
+
     @torch.no_grad()
     def get_terrain_heights(self, points):
         """ Get the terrain_lib heights below the given points """
@@ -175,45 +180,3 @@ class PlaneTerrain:
         heights[out_of_range_mask] = - torch.inf
         heights = heights.view(points_shape[:-1])
         return heights
-
-
-    @torch.no_grad()
-    def get_terrain_heights(self, points):
-        """ Get the terrain heights below the given points """
-        points_shape = points.shape
-        points = points.view(-1, 3)
-        points_x_px = (points[:, 0] / self.cfg.horizontal_scale).to(int)
-        points_y_px = (points[:, 1] / self.cfg.horizontal_scale).to(int)
-        out_of_range_mask = torch.logical_or(
-            torch.logical_or(points_x_px < 0, points_x_px >= self.heightfield_raw_pyt.shape[0]),
-            torch.logical_or(points_y_px < 0, points_y_px >= self.heightfield_raw_pyt.shape[1]),
-        )
-        points_x_px = torch.clip(points_x_px, 0, self.heightfield_raw_pyt.shape[0] - 1)
-        points_y_px = torch.clip(points_y_px, 0, self.heightfield_raw_pyt.shape[1] - 1)
-        heights = self.heightfield_raw_pyt[points_x_px, points_y_px] * self.cfg.vertical_scale
-        heights[out_of_range_mask] = - torch.inf
-        heights = heights.view(points_shape[:-1])
-        return heights
-
-# 如何获取全局坐标系下的高度
-# 1. if height_field_raw是全局坐标，直接按索引即可；
-# 2. if height_field_raw是环境下的坐标, 那self.vertices赋值后直接add_trimesh_to_sim错误，不可能
-
-
-    # @torch.no_grad()
-    # def get_terrain_heights(self, points):
-    #     """ Get the terrain_lib heights below the given points """
-    #     points_shape = points.shape
-    #     points = points.view(-1, 3)
-    #     points_x_px = (points[:, 0] / self.cfg.horizontal_scale).to(int)
-    #     points_y_px = (points[:, 1] / self.cfg.horizontal_scale).to(int)
-    #     out_of_range_mask = torch.logical_or(
-    #         torch.logical_or(points_x_px < 0, points_x_px >= self.heightfield_raw_pyt.shape[0]),
-    #         torch.logical_or(points_y_px < 0, points_y_px >= self.heightfield_raw_pyt.shape[1]),
-    #     )
-    #     points_x_px = torch.clip(points_x_px, 0, self.heightfield_raw_pyt.shape[0] - 1)
-    #     points_y_px = torch.clip(points_y_px, 0, self.heightfield_raw_pyt.shape[1] - 1)
-    #     heights = self.heightfield_raw_pyt[points_x_px, points_y_px] * self.cfg.vertical_scale
-    #     heights[out_of_range_mask] = - torch.inf
-    #     heights = heights.view(points_shape[:-1])
-    #     return heights
